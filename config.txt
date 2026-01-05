@@ -1,0 +1,4 @@
+minSupp=0.1
+minConf=0.5
+FindConditionalMutualExclusiveSets=true
+FindMutualExclusiveSets=true
