@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html class="no-js">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>GD3 Example Mutation Matrix</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div id="mutex"></div>
+    <button id="save-svg">Save as SVG</button>
+    <div id="svg-image"></div>
+
+    <script src="d3.min.js"></script>
+    <script src="gd3.mutmtx.js"></script>
+    
+    <script>
+    var style = {
+      width: 1000
+    }
+
+    d3.json('mutmtx.json', function(data) {
+      d3.select('#mutex')
+        .datum(data)
+        .call(gd3.mutationMatrix({style:style}));
+    });
+    </script>
+    <script>
+      d3.select("#save-svg").on("click", function(){
+        var html = d3.select("svg")
+          .attr("version", 1.1)
+          .attr("xmlns", "http://www.w3.org/2000/svg")
+          .node().parentNode.innerHTML;
+
+      //console.log(html);
+      var imgsrc = 'data:image/svg+xml;base64,'+ btoa(unescape(encodeURIComponent(html.split('<p')[0])));
+      var img = '<img src="'+imgsrc+'">'; 
+      d3.select("#svg-image").html(img);
+    });
+    </script>
+  </body>
+</html>

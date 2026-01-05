@@ -1,0 +1,11 @@
+/home/sukriye/Desktop/Projects/MEMNAR-WebServer/backend/src/main/java/org/memnar/backend/BackendApplication.java
+/home/sukriye/Desktop/Projects/MEMNAR-WebServer/backend/src/main/java/org/memnar/backend/config/WebSocketConfig.java
+/home/sukriye/Desktop/Projects/MEMNAR-WebServer/backend/src/main/java/org/memnar/backend/memnarjar/controller/ConfigController.java
+/home/sukriye/Desktop/Projects/MEMNAR-WebServer/backend/src/main/java/org/memnar/backend/memnarjar/controller/FileController.java
+/home/sukriye/Desktop/Projects/MEMNAR-WebServer/backend/src/main/java/org/memnar/backend/memnarjar/controller/MemnarJarController.java
+/home/sukriye/Desktop/Projects/MEMNAR-WebServer/backend/src/main/java/org/memnar/backend/memnarjar/dto/FileDTO.java
+/home/sukriye/Desktop/Projects/MEMNAR-WebServer/backend/src/main/java/org/memnar/backend/memnarjar/model/ConfigData.java
+/home/sukriye/Desktop/Projects/MEMNAR-WebServer/backend/src/main/java/org/memnar/backend/memnarjar/model/MemnarJarData.java
+/home/sukriye/Desktop/Projects/MEMNAR-WebServer/backend/src/main/java/org/memnar/backend/memnarjar/model/MemnarJarStatus.java
+/home/sukriye/Desktop/Projects/MEMNAR-WebServer/backend/src/main/java/org/memnar/backend/memnarjar/service/ConfigService.java
+/home/sukriye/Desktop/Projects/MEMNAR-WebServer/backend/src/main/java/org/memnar/backend/memnarjar/service/FileService.java

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>__TITLE__</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+    * {
+      font-family: Arial;
+    }
+    .pagination{
+        position: relative;
+        left: -50%;
+        float: left;
+    }
+    .pagination a {
+        color: black;
+        float: left;
+        padding: 8px 16px;
+        text-decoration: none;
+        transition: background-color .3s;
+    }
+
+    /* Style the active/current link */
+    .pagination a.active {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    /* Add a grey background color on mouse-over */
+    .pagination a:hover:not(.active) {background-color: #ddd;}
+
+    .wrapper {
+        position: relative;
+        left: 50%;
+        float: left;
+    }
+</style>
+</head>
+<body>
+<b>Analysis name:</b> __TITLE__<br />
+<b>Input:</b> __TITLE__<br />
+<b>Min-supp:</b> __MINSUPP__ (__PATIENTNUM__)<br />
+<b>Min-conf:</b> __MINCONF__<br />
+<div id="pvaluethreshold"><b>p-value threshold:</b> __PVALUETH__</div>
+<div id="numofresults"><b>Number Of Results Found : </b>__NumOfResults__</div>
+<b>Use Bonferroni:</b><input type="checkbox" id="Bonferroni"><br />
+<div class="wrapper">
+<div class="pagination" ID="pagination_begin">
+</div></div><br /><br />
+<center><h2>__ResultsType__</h2></center>
+__PAGEINDICATOR__
+<div ID="__PAGENUMBER__">
+__PAGEINDICATOREND__
+__REPEATBEGIN__
+<div id="MEGS_ID_">
+    <div class="setnameandpvalue"><b>__SETID__. _SET_</b> , p-value : _PVALUE_</div><br />
+<div id="mutex_ID_"></div>
+<button id="save-svg_ID_">Save as SVG</button>
+<div id="svg-image_ID_"></div>
+<b>Rules: </b>
+<ul id="Rules_ID_">
+    __RULES__
+</ul>
+<b>Pathways:</b><br />
+<ul>
+    __REPEATEND__
+    _PATHWAYSBEGIN_
+    <li>
+        <a href=_PATHWAYLINK_ target="_blank"> _PATHWAYID_ -  _PATHWAYNAME_ </a> - includes: _GENES_ <br />
+    </li>
+    _PATHWAYSEND_
+    _REPEATAFTERPATHWAY_
+</ul>
+</div>
+_REPEATAFTERPATHWAYEND_
+</div>
+<div class="wrapper">
+<div class="pagination" ID="pagination_end">
+</div></div>
+<script>
+    var setsnum = _NumOfResults_;
+    var pages = [];
+    var url_string = window.location.href;
+    var url = new URL(url_string);
+    var B = url.searchParams.get("B");
+    if(B == null)
+        B=0;
+    var dd = document.getElementById("Bonferroni");
+    if(B==1)
+        dd.checked = true;
+    dd.onchange = function(){
+        if(dd.checked)
+            B = 1;
+        else
+            B = 0;
+        var P1 = url.searchParams.get("P");
+        if(P1==null)
+            url_string = url_string + "?P=" + P;
+        if(url.searchParams.get("B") == null)
+            url_string = url_string + "&B=" + B;
+        else
+        {
+            url_string = url_string.substring(0,url_string.length - 1) + B;
+        }
+        window.location.href = url_string;
+    }
+    var th = document.getElementById("pvaluethreshold").innerHTML;
+    var indx = th.indexOf("</b>") + 5;
+    var thv = parseFloat(th.substring(indx, th.length));
+    if(B==1)
+    {
+        setsnum = 0;
+        for(var i=0;i<_NumOfResults_;i++)
+        {
+            var wholeMEGS = document.getElementById("MEGS"+i);
+            var MEGS = wholeMEGS.getElementsByClassName("setnameandpvalue")[0];
+            var Rules = document.getElementById("Rules"+i).getElementsByClassName("Rule");
+            var MEGSString = MEGS.innerHTML;
+            var index = MEGSString.indexOf("p-value") + 9;
+            var Pvalue = parseFloat(MEGSString.substring(index, MEGSString.length));
+            var newthv = thv / _NumOfResults_;
+            if(Pvalue < newthv)
+                setsnum++;
+            else
+                wholeMEGS.innerHTML = "";
+        }
+        var numofresults = document.getElementById("numofresults");
+        var resindx = numofresults.innerHTML.indexOf("</b>") + 4;
+        var numofresultsHTML = numofresults.innerHTML.substring(0,resindx) + setsnum;
+        numofresults.innerHTML = numofresultsHTML;
+    }
+    var P = url.searchParams.get("P");
+    if(P == null)
+        P=1;
+    P = parseInt(P);
+    var numofpages = parseInt((setsnum/10) + 1);
+    if(setsnum % 10 == 0)
+        numofpages--;
+    if(P>numofpages)
+        P = numofpages;
+    if(P<1)
+        P = 1;
+    var inpagination = "";
+    if(P-1 >= 1)
+        inpagination = "<a name='prev' href='?P=" + (P-1) + "&B=" + B + "'>&laquo;</a>";
+    else
+        inpagination = "<a name='prev' href='#'>&laquo;</a>";
+    var startpage = 1;
+    var endpage = 10;
+    if(numofpages > 10)
+        endpage = 10;
+    else
+        endpage = numofpages;
+    if(P>5){
+        startpage = P-4;
+        endpage = P + 5;
+        if(endpage > numofpages){
+            endpage = numofpages;
+            startpage = numofpages - 9;
+        }
+        if(startpage<1)
+            startpage = 1;
+    }
+    for(var i=startpage;i<=endpage;i++)
+    {
+        if( i == P )
+            inpagination += "<a class='active' href='?P=" + i + "&B=" + B + "'>" + i + "</a>";
+        else
+            inpagination += "<a href='?P=" + i + "&B=" + B + "'>" + i + "</a>";
+    }
+    if(P+1 <= numofpages)
+        inpagination += "<a name='next' href='?P=" + (P+1) + "&B=" + B + "'>&raquo;</a>";
+    else
+        inpagination += "<a name='next' href='#'>&raquo;</a>";
+    var paginationend = document.getElementById("pagination_end");
+    var paginationbegin = document.getElementById("pagination_begin");
+    paginationend.innerHTML = inpagination;
+    paginationbegin.innerHTML = inpagination;
+    for(var i=1;i<=numofpages;i++)
+    {
+        pages[i] = document.getElementById("" + i).innerHTML;
+        if(i!=P)
+            document.getElementById("" + i).innerHTML = "";
+    }
+</script>
+
+<script src="d3.min.js"></script>
+<script src="gd3.mutmtx.js"></script>
+
+<script>
+
+    var style = {
+      width: 1000,
+      fontFamily: "Arial"
+    }
+
+    for (var i = 0; i < _NumOfResults_; i++) {
+    	var _this = this;
+    	(function (_i) {
+        	d3.json('_JSONOUTSPATH_/_Conditional_mutmtx' + _i + '.json', function(data) {
+      			d3.select('#mutex' + _i)
+        		.datum(data)
+        		.call(gd3.mutationMatrix({style:style}));
+    		});
+    	})(i);
+	}
+    </script>
+<script>
+    	for (var i = 0; i <= _NumOfResults_; i++) {
+    	var _this = this;
+    	(function (_i) {
+      		d3.select("#save-svg" + _i).on("click", function(){
+        		var html = d3.select('#mutex' + _i + ' > #mutation-matrix')
+          		.attr("version", 1.1)
+          		.attr("xmlns", "http://www.w3.org/2000/svg")
+          		.node().parentNode.innerHTML;
+
+      			var imgsrc = 'data:image/svg+xml;base64,'+ btoa(unescape(encodeURIComponent(html.split('<p')[0])));
+      			var img = '<img src="'+imgsrc+'">';
+      			d3.select("#svg-image" + _i).html(img).call(d3.behavior.zoom().on("zoom", null));
+    		});
+      	})(i);
+    }
+    </script>
+</body>
+</html>

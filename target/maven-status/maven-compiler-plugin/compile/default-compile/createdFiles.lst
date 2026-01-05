@@ -1,0 +1,12 @@
+org/memnar/backend/memnarjar/dto/FileDTO.class
+org/memnar/backend/config/WebSocketConfig.class
+org/memnar/backend/memnarjar/service/ConfigService.class
+org/memnar/backend/memnarjar/controller/FileController.class
+org/memnar/backend/memnarjar/controller/MemnarJarController.class
+org/memnar/backend/memnarjar/model/MemnarJarData.class
+org/memnar/backend/memnarjar/controller/ConfigController.class
+org/memnar/backend/memnarjar/model/ConfigData.class
+org/memnar/backend/memnarjar/model/MemnarJarStatus.class
+org/memnar/backend/BackendApplication.class
+org/memnar/backend/memnarjar/dto/FileDTO$FileDTOBuilder.class
+org/memnar/backend/memnarjar/service/FileService.class
