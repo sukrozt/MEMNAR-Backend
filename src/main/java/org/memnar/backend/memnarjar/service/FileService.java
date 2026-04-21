@@ -6,7 +6,6 @@ import java.nio.file.*;
 import java.util.Base64;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import java.nio.file.StandardOpenOption;
 
 
 @Service
@@ -73,4 +72,54 @@ public class FileService {
         }
         System.out.println("--- UNZIP FINISHED ---");
     }
+
+
+    public void runDataConverter(String rawInputPath, String outputPath) {
+        try {
+            System.out.println("⚙️ Starting DataConverter...");
+            
+            // Find the class from the Default Package dynamically
+            Class<?> converterClass = Class.forName("RunConverter");
+            
+            // Grab its main(String[] args) method
+            java.lang.reflect.Method mainMethod = converterClass.getMethod("main", String[].class);
+            
+            // Set up the arguments (input file, output file)
+            String[] args = { rawInputPath, outputPath }; 
+            
+            // Execute it
+            mainMethod.invoke(null, (Object) args);
+            
+            System.out.println("✅ Conversion completed! Formatted data saved at: " + outputPath);
+
+        } catch (ClassNotFoundException e) {
+            System.err.println("❌ Error: RunConverter class could not be found!");
+        } catch (Exception e) {
+            System.err.println("❌ Error executing converter: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public void ensureKeggPathwayExists() {
+        try {
+            // 1. Define the exact path the algorithm expects
+            File keggDir = new File("mutation_data/KeggPathway");
+            
+            // 2. Create the directory if it doesn't exist
+            if (!keggDir.exists()) {
+                keggDir.mkdirs();
+            }
+            
+            // 3. Create the dummy background file
+            File pathwayFile = new File(keggDir, "PathwayIDToPathwayName.txt");
+            if (!pathwayFile.exists()) {
+                pathwayFile.createNewFile(); // Creates an empty file
+                System.out.println("Created PathwayIDToPathwayName.txt.");
+            }
+            
+        } catch (IOException e) {
+            System.err.println("Failed to create KeggPathway background files: " + e.getMessage());
+        }
+    }
+
 }

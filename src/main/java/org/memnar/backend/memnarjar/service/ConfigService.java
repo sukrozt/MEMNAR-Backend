@@ -20,6 +20,12 @@ public class ConfigService {
 
     public void updateConfig(ConfigData newConfig) {
         this.currentConfig = newConfig;
+        try {
+            persistConfigFile();
+            System.out.println("Configuration updated and saved to file.");
+        } catch (IOException e) {
+            System.err.println("ERROR: Failed to save config.properties after update from web interface: " + e.getMessage());
+        }
     }
 
     public void writeConfigFile() throws IOException {
@@ -27,18 +33,23 @@ public class ConfigService {
         if (!targetResDir.exists()) targetResDir.mkdirs();
 
         setupResources(targetResDir);
-        File configFile = new File(targetResDir, "config.properties");
-        writePropertiesToFile(configFile);
-        File defaultFile = new File(targetResDir, "default.properties");
-        writePropertiesToFile(defaultFile);
+        persistConfigFile();
     }
-private void setupResources(File targetResDir) {
+
+    private void persistConfigFile() throws IOException {
+        File datasetMgrDir = new File("res/datasetmgr");
+        if (!datasetMgrDir.exists()) datasetMgrDir.mkdirs();
+
+        File configFile = new File(datasetMgrDir, "config.properties");
+        writePropertiesToFile(configFile);
+    }
+    private void setupResources(File targetResDir) {
         // A. Copy HTML Template
-        copyRecursive(new File("src/main/resources/res/HTMLOutputTemplates"), new File(targetResDir, "HTMLOutputTemplates"));
+        copyRecursive(new File("res/HTMLOutputTemplates"), new File(targetResDir, "HTMLOutputTemplates"));
 
         // B. Copy Libraries (Recursively copies d3.min.js and folders)
         File targetLibDir = new File("libraries");
-        copyRecursive(new File("src/main/resources/libraries"), targetLibDir);
+        copyRecursive(new File("libraries/gd3_mutmtx"), targetLibDir);
     }
 
     // --- RECURSIVE COPIER ---
@@ -63,42 +74,6 @@ private void setupResources(File targetResDir) {
         }
     }
 
-    private void copyFile(String resourcePath, File destFile) {
-        try {
-            if (!destFile.getParentFile().exists()) destFile.getParentFile().mkdirs();
-            
-            var source = getClass().getClassLoader().getResourceAsStream(resourcePath);
-            if (source != null) {
-                Files.copy(source, destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                System.out.println("Copied resource: " + resourcePath);
-                source.close();
-            } else {
-                System.err.println("WARNING: Resource not found in src: " + resourcePath);
-            }
-        } catch (IOException e) {
-            System.err.println("Failed to copy " + resourcePath + ": " + e.getMessage());
-        }
-    }
-
-    private void setupHtmlTemplate(File targetResDir) {
-        File targetTemplateDir = new File(targetResDir, "HTMLOutputTemplates");
-        if (!targetTemplateDir.exists()) targetTemplateDir.mkdirs();
-        File targetFile = new File(targetTemplateDir, "HTMLOutputTemplate.html");
-        File sourceFile = new File("src/main/resources/res/HTMLOutputTemplates/HTMLOutputTemplate.html");
-
-        try {
-            if (sourceFile.exists()) {
-                Files.copy(sourceFile.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                System.out.println("Template copied: " + sourceFile.getPath() + " -> " + targetFile.getPath());
-            } else {
-                System.err.println("CRITICAL WARNING: Source template not found at: " + sourceFile.getAbsolutePath());
-                System.err.println("Please check if the file exists in your 'src/main/resources/res/HTMLOutputTemplates/' folder.");
-            }
-        } catch (IOException e) {
-            System.err.println("Failed to copy HTML template: " + e.getMessage());
-        }
-    }
-
     private void writePropertiesToFile(File file) throws IOException {
         try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
             writer.println("# Generated Config by Web Interface");
@@ -116,8 +91,15 @@ private void setupResources(File targetResDir) {
             writer.println("TimeLimit=" + currentConfig.getTimeLimit());
 
             // --- FILE PATHS ---
-            String basePath = "mutation_data/braingene.txt"; 
-            writer.println("DatasetName=braingene");
+            String basePath = currentConfig.getDatasetName() != null ? currentConfig.getDatasetName() : "mutation_data"; 
+            
+            // Derive short name for DatasetName
+            String datasetShortName = basePath;
+            if (datasetShortName.contains("/")) datasetShortName = datasetShortName.substring(datasetShortName.lastIndexOf("/") + 1);
+            if (datasetShortName.endsWith(".txt")) datasetShortName = datasetShortName.substring(0, datasetShortName.length() - 4);
+            if (datasetShortName.endsWith(".zip")) datasetShortName = datasetShortName.substring(0, datasetShortName.length() - 4);
+
+            writer.println("DatasetName=" + datasetShortName);
             writer.println("FPGInputPathP1=" + basePath);
             writer.println("Rawinput=" + basePath);
 
