@@ -41,7 +41,9 @@ public class ConfigService {
         if (!datasetMgrDir.exists()) datasetMgrDir.mkdirs();
 
         File configFile = new File(datasetMgrDir, "config.properties");
+        File configFileSecond = new File("res", "config.properties");
         writePropertiesToFile(configFile);
+        writePropertiesToFile(configFileSecond);
     }
     private void setupResources(File targetResDir) {
         // A. Copy HTML Template
