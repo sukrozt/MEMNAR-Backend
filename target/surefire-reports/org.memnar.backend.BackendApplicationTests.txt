@@ -1,4 +1,33 @@
 -------------------------------------------------------------------------------
 Test set: org.memnar.backend.BackendApplicationTests
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.350 s -- in org.memnar.backend.BackendApplicationTests
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 1.711 s <<< FAILURE! -- in org.memnar.backend.BackendApplicationTests
+org.memnar.backend.BackendApplicationTests.testRunDataConverter -- Time elapsed: 0.400 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: RunConverter threw an exception during execution! ==> Unexpected exception thrown: java.lang.reflect.InvocationTargetException
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:152)
+	at org.junit.jupiter.api.AssertDoesNotThrow.createAssertionFailedError(AssertDoesNotThrow.java:84)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:53)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:40)
+	at org.junit.jupiter.api.Assertions.assertDoesNotThrow(Assertions.java:3218)
+	at org.memnar.backend.BackendApplicationTests.testRunDataConverter(BackendApplicationTests.java:38)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: java.lang.reflect.InvocationTargetException
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at org.memnar.backend.memnarjar.service.FileService.runDataConverter(FileService.java:86)
+	at org.memnar.backend.BackendApplicationTests.lambda$0(BackendApplicationTests.java:39)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:49)
+	... 6 more
+Caused by: java.lang.NullPointerException
+	at java.base/java.io.FileInputStream.<init>(FileInputStream.java:149)
+	at java.base/java.io.FileInputStream.<init>(FileInputStream.java:111)
+	at java.base/java.io.FileReader.<init>(FileReader.java:60)
+	at pnarpp.datasetmgr.TCGADataset.scanDatabaseAndInitializeDataStructers(TCGADataset.java:179)
+	at pnarpp.datasetmgr.TCGADataset.<init>(TCGADataset.java:47)
+	at RunConverter.main(RunConverter.java:10)
+	... 13 more
+

@@ -2,6 +2,8 @@ package org.memnar.backend.memnarjar.service;
 
 import org.memnar.backend.memnarjar.model.ConfigData;
 import org.springframework.stereotype.Service;
+import org.springframework.context.event.EventListener;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -14,11 +16,58 @@ public class ConfigService {
 
     private ConfigData currentConfig = new ConfigData();
 
+    // Dummy function to test RunConverter without unit tests
+    // This runs automatically exactly once when the Spring Boot application starts up.
+    @EventListener(ApplicationReadyEvent.class)
+    public void dummyTestRunConverter() {
+        System.out.println("\n[DEBUG - ConfigService] --- RUNNING DUMMY TEST FOR RunConverter ---");
+        try {
+            // 1. Setup mock directories inside your backend project folder
+            File tempInputDir = new File("mock_tcga_input");
+            tempInputDir.mkdirs();
+            File tempOutputDir = new File("mock_tcga_output");
+            tempOutputDir.mkdirs();
+
+            // 2. Create a mock TCGA raw data file
+            File dummyInput = new File(tempInputDir, "dummy_mutation_data.txt");
+            Files.writeString(dummyInput.toPath(), "Hugo_Symbol\tChromosome\tStart_Position\tEnd_Position\tVariant_Classification\tTumor_Sample_Barcode\n");
+
+            // 3. Setup the config.properties exactly as needed to prevent the NullPointerException
+            File datasetMgrDir = new File("res/datasetmgr");
+            datasetMgrDir.mkdirs();
+            String dummyConfig = "Rawinput=" + tempInputDir.getAbsolutePath().replace("\\", "/") + "\n" +
+                                 "FPGInputPathP1=" + tempOutputDir.getAbsolutePath().replace("\\", "/") + "\n" +
+                                 "DatasetName=mock_tcga\n";
+            Files.writeString(new File(datasetMgrDir, "config.properties").toPath(), dummyConfig);
+            Files.writeString(new File("res", "config.properties").toPath(), dummyConfig);
+
+            // 4. Run the converter manually via reflection
+            System.out.println("[DEBUG] ⚙️ Starting DataConverter...");
+            Class<?> converterClass = Class.forName("RunConverter");
+            java.lang.reflect.Method mainMethod = converterClass.getMethod("main", String[].class);
+            String[] args = { tempInputDir.getAbsolutePath(), tempOutputDir.getAbsolutePath() };
+            mainMethod.invoke(null, (Object) args);
+            
+            System.out.println("[DEBUG] ✅ DataConverter finished successfully! Check the 'mock_tcga_output' folder.\n");
+        } catch (Exception e) {
+            System.err.println("[DEBUG] ❌ Dummy test failed with exception:");
+            e.printStackTrace();
+        }
+    }
+
     public ConfigData getConfig() {
         return currentConfig;
     }
 
     public void updateConfig(ConfigData newConfig) {
+        System.out.println("[DEBUG - ConfigService] updateConfig called! Old DatasetName: " + this.currentConfig.getDatasetName() + " | New DatasetName: " + newConfig.getDatasetName());
+        
+        // BUGFIX: Prevent the frontend from overwriting a valid dataset name with null or empty values
+        String incomingName = newConfig.getDatasetName();
+        if (incomingName == null || incomingName.trim().isEmpty() || incomingName.equals("mutation_data")) {
+            newConfig.setDatasetName(this.currentConfig.getDatasetName());
+        }
+
         this.currentConfig = newConfig;
         try {
             persistConfigFile();
@@ -93,6 +142,7 @@ public class ConfigService {
             writer.println("TimeLimit=" + currentConfig.getTimeLimit());
 
             // --- FILE PATHS ---
+            System.out.println("[DEBUG - ConfigService] Writing config.properties. Current getDatasetName() is: " + currentConfig.getDatasetName());
             String basePath = currentConfig.getDatasetName() != null ? currentConfig.getDatasetName() : "mutation_data"; 
             
             // Derive short name for DatasetName

@@ -49,6 +49,7 @@ public class FileController {
 
                 ConfigData config = configService.getConfig();
                 config.setDatasetName(formattedOutputPath);
+                System.out.println("[DEBUG - FileController] Set DatasetName in config to: " + formattedOutputPath);
                 configService.updateConfig(config);
 
                 return new MemnarJarStatus("Success", "Zip uploaded, unzipped, formatted, and background files secured.");
@@ -58,6 +59,7 @@ public class FileController {
             ConfigData config = configService.getConfig();
             String exactTextFilePath = fileService.findTextFileInDirectory("mutation_data"); 
             config.setDatasetName(exactTextFilePath); 
+            System.out.println("[DEBUG - FileController] Set DatasetName in config to: " + exactTextFilePath);
             configService.updateConfig(config);
             return new MemnarJarStatus("Success", "Zip uploaded, unzipped, and ready for MEMNAR.");
         }

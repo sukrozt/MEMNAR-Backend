@@ -35,6 +35,8 @@ public class MemnarJarController {
         // Alert the client immediately that the algorithm has started running
         messagingTemplate.convertAndSend("/memnarjar/status", new MemnarJarStatus("Running", "The MEMNAR algorithm is currently executing..."));
 
+        System.out.println("[DEBUG - MemnarJarController] About to write config file. DatasetName currently is: " + configService.getConfig().getDatasetName());
+
         configService.writeConfigFile();
         long startTime = System.currentTimeMillis();
         
@@ -52,6 +54,18 @@ public class MemnarJarController {
         long latestTime = 0;
 
         if (outputDir.exists() && outputDir.isDirectory()) {
+            // 1. Check for files directly in the 'output' directory
+            File[] directFiles = outputDir.listFiles((dir, name) -> name.endsWith(".html"));
+            if (directFiles != null) {
+                for (File file : directFiles) {
+                    if (file.lastModified() > latestTime) {
+                        latestOutputFile = file;
+                        latestTime = file.lastModified();
+                    }
+                }
+            }
+
+            // 2. Check for files in subdirectories
             File[] subDirs = outputDir.listFiles(File::isDirectory);
             if (subDirs != null) {
                 for (File subDir : subDirs) {

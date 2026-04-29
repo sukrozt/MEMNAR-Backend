@@ -7,7 +7,7 @@ import java.nio.file.*;
 import java.util.Base64;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-
+import pnarpp.algorithm.PNARpp;
 
 @Service
 public class FileService {
@@ -75,42 +75,36 @@ public class FileService {
     }
 
 
-    public void runDataConverter(String rawInputPath, String outputPath) {
+    public void runDataConverter(String rawInputPath, String outputPath) throws Exception {
         try {
             System.out.println("⚙️ Starting DataConverter...");
             
-            // Find the class from the Default Package dynamically
+            // Use Reflection to call the main method of RunConverter (which is in the default package)
             Class<?> converterClass = Class.forName("RunConverter");
-            
-            // Grab its main(String[] args) method
             java.lang.reflect.Method mainMethod = converterClass.getMethod("main", String[].class);
-            
-            // Set up the arguments (input file, output file)
-            String[] args = { rawInputPath, outputPath }; 
-            
-            // Execute it
+            String[] args = { rawInputPath, outputPath };
             mainMethod.invoke(null, (Object) args);
             
-            System.out.println("✅ Conversion completed! Formatted data saved at: " + outputPath);
-
-        } catch (ClassNotFoundException e) {
-            System.err.println("❌ Error: RunConverter class could not be found!");
+            System.out.println("✅ DataConverter finished successfully.");
         } catch (Exception e) {
             System.err.println("❌ Error executing converter: " + e.getMessage());
-            e.printStackTrace();
-        }
+            throw e;
+    }
     }
 
     public String findTextFileInDirectory(String dirPath) {
+    System.out.println("[DEBUG - FileService] Searching for .txt file in directory: " + dirPath);
     File dir = new File(dirPath);
     if (dir.exists() && dir.isDirectory()) {
         File[] files = dir.listFiles((d, name) -> name.endsWith(".txt"));
         if (files != null && files.length > 0) {
             // Klasördeki ilk txt dosyasının yolunu döndür
+            System.out.println("[DEBUG - FileService] Found text file: " + dirPath + "/" + files[0].getName());
             return dirPath + "/" + files[0].getName(); 
         }
     }
-    return dirPath; // Bulamazsa fallback
+    System.out.println("[DEBUG - FileService] WARNING: No .txt file found! Falling back to returning directory path: " + dirPath);
+    return dirPath;
 }
 
     public void enforceMutationDataFolder(String zipFileName) throws IOException {
