@@ -2,6 +2,8 @@ package org.memnar.backend.memnarjar.service;
 
 import org.memnar.backend.memnarjar.model.ConfigData;
 import org.springframework.stereotype.Service;
+import org.springframework.context.event.EventListener;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -14,12 +16,65 @@ public class ConfigService {
 
     private ConfigData currentConfig = new ConfigData();
 
+    // Dummy function to test RunConverter without unit tests
+    // This runs automatically exactly once when the Spring Boot application starts up.
+    @EventListener(ApplicationReadyEvent.class)
+    public void dummyTestRunConverter() {
+        System.out.println("\n[DEBUG - ConfigService] --- RUNNING DUMMY TEST FOR RunConverter ---");
+        try {
+            // 1. Setup mock directories inside your backend project folder
+            File tempInputDir = new File("mock_tcga_input");
+            tempInputDir.mkdirs();
+            File tempOutputDir = new File("mock_tcga_output");
+            tempOutputDir.mkdirs();
+
+            // 2. Create a mock TCGA raw data file
+            File dummyInput = new File(tempInputDir, "dummy_mutation_data.txt");
+            Files.writeString(dummyInput.toPath(), "Hugo_Symbol\tChromosome\tStart_Position\tEnd_Position\tVariant_Classification\tTumor_Sample_Barcode\n");
+
+            // 3. Setup the config.properties exactly as needed to prevent the NullPointerException
+            File datasetMgrDir = new File("res/datasetmgr");
+            datasetMgrDir.mkdirs();
+            String dummyConfig = "Rawinput=" + tempInputDir.getAbsolutePath().replace("\\", "/") + "\n" +
+                                 "FPGInputPathP1=" + tempOutputDir.getAbsolutePath().replace("\\", "/") + "\n" +
+                                 "DatasetName=mock_tcga\n";
+            Files.writeString(new File(datasetMgrDir, "config.properties").toPath(), dummyConfig);
+            Files.writeString(new File("res", "config.properties").toPath(), dummyConfig);
+
+            // 4. Run the converter manually via reflection
+            System.out.println("[DEBUG] ⚙️ Starting DataConverter...");
+            Class<?> converterClass = Class.forName("RunConverter");
+            java.lang.reflect.Method mainMethod = converterClass.getMethod("main", String[].class);
+            String[] args = { tempInputDir.getAbsolutePath(), tempOutputDir.getAbsolutePath() };
+            mainMethod.invoke(null, (Object) args);
+            
+            System.out.println("[DEBUG] ✅ DataConverter finished successfully! Check the 'mock_tcga_output' folder.\n");
+        } catch (Exception e) {
+            System.err.println("[DEBUG] ❌ Dummy test failed with exception:");
+            e.printStackTrace();
+        }
+    }
+
     public ConfigData getConfig() {
         return currentConfig;
     }
 
     public void updateConfig(ConfigData newConfig) {
+        System.out.println("[DEBUG - ConfigService] updateConfig called! Old DatasetName: " + this.currentConfig.getDatasetName() + " | New DatasetName: " + newConfig.getDatasetName());
+        
+        // BUGFIX: Prevent the frontend from overwriting a valid dataset name with null or empty values
+        String incomingName = newConfig.getDatasetName();
+        if (incomingName == null || incomingName.trim().isEmpty() || incomingName.equals("mutation_data")) {
+            newConfig.setDatasetName(this.currentConfig.getDatasetName());
+        }
+
         this.currentConfig = newConfig;
+        try {
+            persistConfigFile();
+            System.out.println("Configuration updated and saved to file.");
+        } catch (IOException e) {
+            System.err.println("ERROR: Failed to save config.properties after update from web interface: " + e.getMessage());
+        }
     }
 
     public void writeConfigFile() throws IOException {
@@ -27,18 +82,25 @@ public class ConfigService {
         if (!targetResDir.exists()) targetResDir.mkdirs();
 
         setupResources(targetResDir);
-        File configFile = new File(targetResDir, "config.properties");
-        writePropertiesToFile(configFile);
-        File defaultFile = new File(targetResDir, "default.properties");
-        writePropertiesToFile(defaultFile);
+        persistConfigFile();
     }
-private void setupResources(File targetResDir) {
+
+    private void persistConfigFile() throws IOException {
+        File datasetMgrDir = new File("res/datasetmgr");
+        if (!datasetMgrDir.exists()) datasetMgrDir.mkdirs();
+
+        File configFile = new File(datasetMgrDir, "config.properties");
+        File configFileSecond = new File("res", "config.properties");
+        writePropertiesToFile(configFile);
+        writePropertiesToFile(configFileSecond);
+    }
+    private void setupResources(File targetResDir) {
         // A. Copy HTML Template
-        copyRecursive(new File("src/main/resources/res/HTMLOutputTemplates"), new File(targetResDir, "HTMLOutputTemplates"));
+        copyRecursive(new File("res/HTMLOutputTemplates"), new File(targetResDir, "HTMLOutputTemplates"));
 
         // B. Copy Libraries (Recursively copies d3.min.js and folders)
         File targetLibDir = new File("libraries");
-        copyRecursive(new File("src/main/resources/libraries"), targetLibDir);
+        copyRecursive(new File("libraries/gd3_mutmtx"), targetLibDir);
     }
 
     // --- RECURSIVE COPIER ---
@@ -63,42 +125,6 @@ private void setupResources(File targetResDir) {
         }
     }
 
-    private void copyFile(String resourcePath, File destFile) {
-        try {
-            if (!destFile.getParentFile().exists()) destFile.getParentFile().mkdirs();
-            
-            var source = getClass().getClassLoader().getResourceAsStream(resourcePath);
-            if (source != null) {
-                Files.copy(source, destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                System.out.println("Copied resource: " + resourcePath);
-                source.close();
-            } else {
-                System.err.println("WARNING: Resource not found in src: " + resourcePath);
-            }
-        } catch (IOException e) {
-            System.err.println("Failed to copy " + resourcePath + ": " + e.getMessage());
-        }
-    }
-
-    private void setupHtmlTemplate(File targetResDir) {
-        File targetTemplateDir = new File(targetResDir, "HTMLOutputTemplates");
-        if (!targetTemplateDir.exists()) targetTemplateDir.mkdirs();
-        File targetFile = new File(targetTemplateDir, "HTMLOutputTemplate.html");
-        File sourceFile = new File("src/main/resources/res/HTMLOutputTemplates/HTMLOutputTemplate.html");
-
-        try {
-            if (sourceFile.exists()) {
-                Files.copy(sourceFile.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                System.out.println("Template copied: " + sourceFile.getPath() + " -> " + targetFile.getPath());
-            } else {
-                System.err.println("CRITICAL WARNING: Source template not found at: " + sourceFile.getAbsolutePath());
-                System.err.println("Please check if the file exists in your 'src/main/resources/res/HTMLOutputTemplates/' folder.");
-            }
-        } catch (IOException e) {
-            System.err.println("Failed to copy HTML template: " + e.getMessage());
-        }
-    }
-
     private void writePropertiesToFile(File file) throws IOException {
         try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
             writer.println("# Generated Config by Web Interface");
@@ -116,8 +142,16 @@ private void setupResources(File targetResDir) {
             writer.println("TimeLimit=" + currentConfig.getTimeLimit());
 
             // --- FILE PATHS ---
-            String basePath = "mutation_data/braingene.txt"; 
-            writer.println("DatasetName=braingene");
+            System.out.println("[DEBUG - ConfigService] Writing config.properties. Current getDatasetName() is: " + currentConfig.getDatasetName());
+            String basePath = currentConfig.getDatasetName() != null ? currentConfig.getDatasetName() : "mutation_data"; 
+            
+            // Derive short name for DatasetName
+            String datasetShortName = basePath;
+            if (datasetShortName.contains("/")) datasetShortName = datasetShortName.substring(datasetShortName.lastIndexOf("/") + 1);
+            if (datasetShortName.endsWith(".txt")) datasetShortName = datasetShortName.substring(0, datasetShortName.length() - 4);
+            if (datasetShortName.endsWith(".zip")) datasetShortName = datasetShortName.substring(0, datasetShortName.length() - 4);
+
+            writer.println("DatasetName=" + datasetShortName);
             writer.println("FPGInputPathP1=" + basePath);
             writer.println("Rawinput=" + basePath);
 
