@@ -2,13 +2,13 @@ package org.memnar.backend.memnarjar.controller;
 
 import org.memnar.backend.memnarjar.model.MemnarJarStatus;
 import org.memnar.backend.memnarjar.service.ConfigService;
+import org.memnar.memnar.pnarpp.algorithm.PNARpp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RestController;
-import pnarpp.algorithm.PNARpp;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,7 +41,7 @@ public class MemnarJarController {
         long startTime = System.currentTimeMillis();
         
         // Ensure this method is thread-safe if multiple users connect!
-        PNARpp.runAlgorithm(); 
+        PNARpp.runAlgorithm();
 
         long endTime = System.currentTimeMillis();
         long totalTime = endTime - startTime;
