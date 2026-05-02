@@ -1,13 +1,15 @@
 package org.memnar.backend.memnarjar.controller;
 
+import org.memnar.backend.memnarjar.dto.FileDTO;
 import org.memnar.backend.memnarjar.model.ConfigData;
 import org.memnar.backend.memnarjar.service.ConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
+@RestController
+@RequestMapping("/api/config")
+// This annotation fixes your CORS error by explicitly allowing your Vite frontend
+@CrossOrigin(origins = "http://localhost:5173")
 public class ConfigController {
 
     private final ConfigService configService;
@@ -17,19 +19,14 @@ public class ConfigController {
         this.configService = configService;
     }
 
-    @MessageMapping("/config/get")
-    @SendTo("/memnarjar/config")
+    // This fixes the 404 error on GET requests (fetching config on load)
+    @GetMapping
     public ConfigData getConfig() {
-        // Fetches the current configuration state directly from the service
         return configService.getConfig();
     }
 
-    @MessageMapping("/config/save")
-    @SendTo("/memnarjar/config")
-    public ConfigData saveConfig(ConfigData config) {
-        System.out.println("[DEBUG - ConfigController] Received WebSocket message from frontend to update config. Received DatasetName: " + config.getDatasetName());
-        // Updates the in-memory configuration state in the service
-        configService.updateConfig(config);
-        return configService.getConfig();
+    @PostMapping
+    public void saveConfig(@RequestBody ConfigData newConfig) {
+        configService.updateConfig(newConfig);
     }
 }

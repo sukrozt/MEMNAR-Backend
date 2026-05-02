@@ -31,17 +31,19 @@ public class FileController {
         System.out.println("\nUPLOAD RECEIVED");
 
         try {
-            Path savedZip = fileService.saveFile(data.getName(), data.getBase64(), data.getChunkIndex(), data.getTotalChunks());
+            Path savedTxt = fileService.saveFile(data.getName(), data.getBase64(), data.getChunkIndex(), data.getTotalChunks());
             
             if (data.getChunkIndex() < data.getTotalChunks() - 1) {
                 return new MemnarJarStatus("Uploading", "Chunk " + (data.getChunkIndex() + 1) + " of " + data.getTotalChunks() + " received.");
             }
-            fileService.unzip(savedZip, "."); 
-            fileService.enforceMutationDataFolder(data.getName());
+            
+            // fileService.unzip(savedTxt, "."); 
+            // fileService.enforceMutationDataFolder(data.getName());
+
             if (data.isUnformatted()) {
                 System.out.println(" User marked data as unformatted. Running DataConverter...");
 
-                String rawInputPath = fileService.findValidRawDataFile("mutation_data");
+                String rawInputPath = savedTxt.toString();
                 System.out.println("Found raw data file for conversion: " + rawInputPath);
                 String formattedOutputPath = "mutation_data/formatted_dataset.txt";
                 
@@ -52,17 +54,17 @@ public class FileController {
                 System.out.println("[DEBUG - FileController] Set DatasetName in config to: " + formattedOutputPath);
                 configService.updateConfig(config);
 
-                return new MemnarJarStatus("Success", "Zip uploaded, unzipped, formatted, and background files secured.");
+                return new MemnarJarStatus("Success", "Txt uploaded, formatted, and background files secured.");
             } else {
-            System.out.println("✅ Data is already formatted. Skipping DataConverter.");
-            
-            ConfigData config = configService.getConfig();
-            String exactTextFilePath = fileService.findTextFileInDirectory("mutation_data"); 
-            config.setDatasetName(exactTextFilePath); 
-            System.out.println("[DEBUG - FileController] Set DatasetName in config to: " + exactTextFilePath);
-            configService.updateConfig(config);
-            return new MemnarJarStatus("Success", "Zip uploaded, unzipped, and ready for MEMNAR.");
-        }
+                System.out.println("✅ Data is already formatted. Skipping DataConverter.");
+                
+                ConfigData config = configService.getConfig();
+                String exactTextFilePath = savedTxt.toString(); 
+                config.setDatasetName(exactTextFilePath); 
+                System.out.println("[DEBUG - FileController] Set DatasetName in config to: " + exactTextFilePath);
+                configService.updateConfig(config);
+                return new MemnarJarStatus("Success", "Txt uploaded and ready for MEMNAR.");
+            }
 
         } catch (Exception e) {
             e.printStackTrace();

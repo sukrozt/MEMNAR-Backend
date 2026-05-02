@@ -7,7 +7,9 @@ import java.nio.file.*;
 import java.util.Base64;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import pnarpp.algorithm.PNARpp;
+import org.memnar.memnar.pnarpp.algorithm.PNARpp;
+import org.memnar.memnar.pnarpp.datasetmgr.TCGADataset;
+import org.memnar.memnar.RunConverter;
 
 @Service
 public class FileService {
@@ -16,7 +18,10 @@ public class FileService {
         
         byte[] decodedBytes = Base64.getDecoder().decode(base64Data);
         
-        Path destinationDir = Paths.get(".").toAbsolutePath().normalize();
+        Path destinationDir = Paths.get("mutation_data").toAbsolutePath().normalize();
+        if (!Files.exists(destinationDir)) {
+            System.out.println("mutation_data folder hasn't been found.");
+        }
         Path filePath = destinationDir.resolve(filename);
 
         if (chunkIndex == 0) {
@@ -74,16 +79,12 @@ public class FileService {
         System.out.println("--- UNZIP FINISHED ---");
     }
 
-
     public void runDataConverter(String rawInputPath, String outputPath) throws Exception {
         try {
             System.out.println("⚙️ Starting DataConverter...");
             
-            // Use Reflection to call the main method of RunConverter (which is in the default package)
-            Class<?> converterClass = Class.forName("RunConverter");
-            java.lang.reflect.Method mainMethod = converterClass.getMethod("main", String[].class);
             String[] args = { rawInputPath, outputPath };
-            mainMethod.invoke(null, (Object) args);
+            RunConverter.main(args);
             
             System.out.println("✅ DataConverter finished successfully.");
         } catch (Exception e) {
