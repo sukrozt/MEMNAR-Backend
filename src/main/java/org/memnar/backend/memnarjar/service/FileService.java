@@ -1,13 +1,13 @@
 package org.memnar.backend.memnarjar.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileSystemUtils;
 import java.io.*;
 import java.nio.file.*;
 import java.util.Base64;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import java.nio.file.StandardOpenOption;
-
+import pnarpp.algorithm.PNARpp;
 
 @Service
 public class FileService {
@@ -72,5 +72,75 @@ public class FileService {
             zis.closeEntry();
         }
         System.out.println("--- UNZIP FINISHED ---");
+    }
+
+
+    public void runDataConverter(String rawInputPath, String outputPath) throws Exception {
+        try {
+            System.out.println("⚙️ Starting DataConverter...");
+            
+            // Use Reflection to call the main method of RunConverter (which is in the default package)
+            Class<?> converterClass = Class.forName("RunConverter");
+            java.lang.reflect.Method mainMethod = converterClass.getMethod("main", String[].class);
+            String[] args = { rawInputPath, outputPath };
+            mainMethod.invoke(null, (Object) args);
+            
+            System.out.println("✅ DataConverter finished successfully.");
+        } catch (Exception e) {
+            System.err.println("❌ Error executing converter: " + e.getMessage());
+            throw e;
+    }
+    }
+
+    public String findTextFileInDirectory(String dirPath) {
+    System.out.println("[DEBUG - FileService] Searching for .txt file in directory: " + dirPath);
+    File dir = new File(dirPath);
+    if (dir.exists() && dir.isDirectory()) {
+        File[] files = dir.listFiles((d, name) -> name.endsWith(".txt"));
+        if (files != null && files.length > 0) {
+            // Klasördeki ilk txt dosyasının yolunu döndür
+            System.out.println("[DEBUG - FileService] Found text file: " + dirPath + "/" + files[0].getName());
+            return dirPath + "/" + files[0].getName(); 
+        }
+    }
+    System.out.println("[DEBUG - FileService] WARNING: No .txt file found! Falling back to returning directory path: " + dirPath);
+    return dirPath;
+}
+
+    public void enforceMutationDataFolder(String zipFileName) throws IOException {
+        String folderName = zipFileName;
+        if (folderName.toLowerCase().endsWith(".zip")) {
+            folderName = folderName.substring(0, folderName.length() - 4);
+        }
+        
+        File extractedDir = new File(folderName);
+        File targetDir = new File("mutation_data");
+        
+        if (!folderName.equalsIgnoreCase("mutation_data") && extractedDir.exists() && extractedDir.isDirectory()) {
+            System.out.println("Renaming unzipped folder '" + folderName + "' to 'mutation_data'");
+            boolean renamed = extractedDir.renameTo(targetDir);
+            if (!renamed) {
+                System.out.println("Rename failed. Creating mutation_data and copying exact context...");
+                FileSystemUtils.copyRecursively(extractedDir, targetDir);
+                FileSystemUtils.deleteRecursively(extractedDir);
+            }
+        }
+    }
+
+    public String findValidRawDataFile(String dirPath) throws IOException {
+        File dir = new File(dirPath);
+        if (dir.exists() && dir.isDirectory()) {
+            File[] files = dir.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    String fileName = file.getName();
+                    // Simple heuristic: find the first file that isn't a hidden/system file.
+                    if (file.isFile() && !fileName.startsWith(".") && !fileName.equalsIgnoreCase("Thumbs.db")) {
+                        return file.getPath();
+                    }
+                }
+            }
+        }
+        throw new IOException("Could not find a suitable raw data file inside the '" + dirPath + "' directory.");
     }
 }

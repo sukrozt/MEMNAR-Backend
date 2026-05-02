@@ -1,0 +1,11 @@
+{
+  "minSupp" : 0.5,
+  "minConf" : 0.8,
+  "findConditionalMutualExclusiveSets" : true,
+  "findMutualExclusiveSets" : true,
+  "minZScore" : -1,
+  "maxSetSize" : 5,
+  "pValueCutoff" : 1.0,
+  "sortByPathway" : false,
+  "tumorsOfInterest" : "other"
+}
