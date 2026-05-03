@@ -36,35 +36,15 @@ public class FileController {
             if (data.getChunkIndex() < data.getTotalChunks() - 1) {
                 return new MemnarJarStatus("Uploading", "Chunk " + (data.getChunkIndex() + 1) + " of " + data.getTotalChunks() + " received.");
             }
+
+            // Set the saved text file path directly in the config
+            ConfigData config = configService.getConfig();
+            String exactTextFilePath = savedTxt.toString(); 
+            config.setDatasetName(exactTextFilePath); 
+            System.out.println("[DEBUG - FileController] Set DatasetName in config to: " + exactTextFilePath);
+            configService.updateConfig(config);
             
-            // fileService.unzip(savedTxt, "."); 
-            // fileService.enforceMutationDataFolder(data.getName());
-
-            if (data.isUnformatted()) {
-                System.out.println(" User marked data as unformatted. Running DataConverter...");
-
-                String rawInputPath = savedTxt.toString();
-                System.out.println("Found raw data file for conversion: " + rawInputPath);
-                String formattedOutputPath = "mutation_data/formatted_dataset.txt";
-                
-                fileService.runDataConverter(rawInputPath, formattedOutputPath);
-
-                ConfigData config = configService.getConfig();
-                config.setDatasetName(formattedOutputPath);
-                System.out.println("[DEBUG - FileController] Set DatasetName in config to: " + formattedOutputPath);
-                configService.updateConfig(config);
-
-                return new MemnarJarStatus("Success", "Txt uploaded, formatted, and background files secured.");
-            } else {
-                System.out.println("✅ Data is already formatted. Skipping DataConverter.");
-                
-                ConfigData config = configService.getConfig();
-                String exactTextFilePath = savedTxt.toString(); 
-                config.setDatasetName(exactTextFilePath); 
-                System.out.println("[DEBUG - FileController] Set DatasetName in config to: " + exactTextFilePath);
-                configService.updateConfig(config);
-                return new MemnarJarStatus("Success", "Txt uploaded and ready for MEMNAR.");
-            }
+            return new MemnarJarStatus("Success", "Txt uploaded and ready for MEMNAR.");
 
         } catch (Exception e) {
             e.printStackTrace();

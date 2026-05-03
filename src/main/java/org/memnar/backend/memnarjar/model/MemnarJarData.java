@@ -1,6 +1,7 @@
 package org.memnar.backend.memnarjar.model;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.messaging.handler.annotation.SendTo;
 
 @Getter

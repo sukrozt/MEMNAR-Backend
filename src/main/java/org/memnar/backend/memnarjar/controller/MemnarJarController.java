@@ -1,7 +1,7 @@
 package org.memnar.backend.memnarjar.controller;
 
 import org.memnar.backend.memnarjar.model.MemnarJarStatus;
-import org.memnar.backend.memnarjar.service.ConfigService;
+import org.memnar.backend.memnarjar.service.DataConverterService;
 import org.memnar.memnar.pnarpp.algorithm.PNARpp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -17,14 +17,15 @@ import java.io.FileInputStream;
 @CrossOrigin
 public class MemnarJarController {
 
-    private final ConfigService configService;
+    private final DataConverterService dataConverterService;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Autowired
-    public MemnarJarController(ConfigService configService, SimpMessagingTemplate messagingTemplate) {
-        this.configService = configService;
+    public MemnarJarController(DataConverterService dataConverterService, SimpMessagingTemplate messagingTemplate) {
+        this.dataConverterService = dataConverterService;
         this.messagingTemplate = messagingTemplate;
     }
+
 
     @MessageMapping("/memnarjar/start")
     @SendTo("/memnarjar/status")
@@ -35,9 +36,9 @@ public class MemnarJarController {
         // Alert the client immediately that the algorithm has started running
         messagingTemplate.convertAndSend("/memnarjar/status", new MemnarJarStatus("Running", "The MEMNAR algorithm is currently executing..."));
 
-        System.out.println("[DEBUG - MemnarJarController] About to write config file. DatasetName currently is: " + configService.getConfig().getDatasetName());
+        // Format the data first if needed (this also securely handles writing the necessary config files)
+        dataConverterService.processFormatting();
 
-        configService.writeConfigFile();
         long startTime = System.currentTimeMillis();
         
         // Ensure this method is thread-safe if multiple users connect!

@@ -14,5 +14,4 @@ public class FileDTO {
     private String base64;
     private int chunkIndex;
     private int totalChunks;
-    private boolean isUnformatted;
 }

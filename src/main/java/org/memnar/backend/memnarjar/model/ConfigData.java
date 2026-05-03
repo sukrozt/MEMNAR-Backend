@@ -19,4 +19,5 @@ public class ConfigData {
     private boolean sortByPathway;
     private String tumorsOfInterest;
     private int timeLimit;
+    private boolean isUnformatted;
 }

@@ -79,11 +79,11 @@ public class FileService {
         System.out.println("--- UNZIP FINISHED ---");
     }
 
-    public void runDataConverter(String rawInputPath, String outputPath) throws Exception {
+    public void runDataConverter(String rawInputPath) throws Exception {
         try {
             System.out.println("⚙️ Starting DataConverter...");
             
-            String[] args = { rawInputPath, outputPath };
+            String[] args = { rawInputPath };
             RunConverter.main(args);
             
             System.out.println("✅ DataConverter finished successfully.");

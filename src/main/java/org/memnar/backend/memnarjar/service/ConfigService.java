@@ -50,10 +50,13 @@ public class ConfigService {
         File datasetMgrDir = new File("res/datasetmgr");
         if (!datasetMgrDir.exists()) datasetMgrDir.mkdirs();
 
-        File configFile = new File(datasetMgrDir, "config.properties");
-        File configFileSecond = new File("res", "config.properties");
-        writePropertiesToFile(configFile);
-        writePropertiesToFile(configFileSecond);
+        File datasetMgrConfig = new File(datasetMgrDir, "config.properties");
+        File mainConfigRes = new File("res", "config.properties");
+        File mainConfigRoot = new File("config.properties"); // Fallback for the DataConverter JAR
+        
+        writeDatasetMgrConfig(datasetMgrConfig);
+        writeMainConfig(mainConfigRes);
+        writeMainConfig(mainConfigRoot);
     }
     private void setupResources(File targetResDir) {
         // A. Copy HTML Template
@@ -86,37 +89,26 @@ public class ConfigService {
         }
     }
 
-    private void writePropertiesToFile(File file) throws IOException {
+    private void writeMainConfig(File file) throws IOException {
         try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
-            writer.println("# Generated Config by Web Interface");
-
-            // --- USER SETTINGS ---
-            writer.println("minsupp=" + currentConfig.getMinSupp());
-            writer.println("minconf=" + currentConfig.getMinConf());
-            writer.println("FindMutualExclusiveSets=" + currentConfig.isFindMutualExclusiveSets());
-            writer.println("FindConditionalMutualExclusiveSets=" + currentConfig.isFindConditionalMutualExclusiveSets());
-            writer.println("minzscore=" + currentConfig.getMinZScore());
-            writer.println("MaxSetSize=" + currentConfig.getMaxSetSize());
-            writer.println("PvalueCutoff=" + currentConfig.getPValueCutoff());
-            writer.println("sortByPathway=" + currentConfig.isSortByPathway());
-            writer.println("tumorsOfInterest=" + currentConfig.getTumorsOfInterest());
-            writer.println("TimeLimit=" + currentConfig.getTimeLimit());
-
-            // --- FILE PATHS ---
-            System.out.println("[DEBUG - ConfigService] Writing config.properties. Current getDatasetName() is: " + currentConfig.getDatasetName());
-            String basePath = currentConfig.getDatasetName() != null ? currentConfig.getDatasetName() : "mutation_data"; 
             
-            // Derive short name for DatasetName
-            String datasetShortName = basePath;
+            String rawPath = currentConfig.getDatasetName() != null ? currentConfig.getDatasetName() : "mutation_data"; 
+            String filteredPath = rawPath;
+            
+            // Pre-calculate the filtered path so the main algorithm knows where to look
+            if (currentConfig.isUnformatted() && !rawPath.endsWith("_filtered.txt")) {
+                filteredPath = rawPath.endsWith(".txt") ? rawPath.substring(0, rawPath.length() - 4) + "_filtered.txt" : rawPath + "_filtered.txt";
+            }
+            
+            String datasetShortName = filteredPath;
             if (datasetShortName.contains("/")) datasetShortName = datasetShortName.substring(datasetShortName.lastIndexOf("/") + 1);
             if (datasetShortName.endsWith(".txt")) datasetShortName = datasetShortName.substring(0, datasetShortName.length() - 4);
-            if (datasetShortName.endsWith(".zip")) datasetShortName = datasetShortName.substring(0, datasetShortName.length() - 4);
 
-            writer.println("DatasetName=" + datasetShortName);
-            writer.println("FPGInputPathP1=" + basePath);
-            writer.println("Rawinput=" + basePath);
-
-            // --- DEFAULTS ---
+            writer.println("minsupp=" + currentConfig.getMinSupp());
+            writer.println("minconf=" + currentConfig.getMinConf());
+            writer.println("minzscore=" + currentConfig.getMinZScore());
+            writer.println("sortByPathway=" + currentConfig.isSortByPathway());
+            
             writer.println("PNARppItemsetsPath=itemsets.txt");
             writer.println("PNARppRulesPath=rules.txt");
             writer.println("MutualExclusiveSetsOutputPath=MutualExclusiveSets.txt");
@@ -125,10 +117,58 @@ public class ConfigService {
             writer.println("printRules=true");
             writer.println("insertPathwaySimilaritiesToItemsets=true");
             writer.println("insertPathwaySimilaritiesToRules=true");
+            writer.println("FindMutualExclusiveSets=" + currentConfig.isFindMutualExclusiveSets());
+            writer.println("FindConditionalMutualExclusiveSets=" + currentConfig.isFindConditionalMutualExclusiveSets());
+            writer.println("FindCustomRules=false");
+            writer.println("MaxSetSize=" + currentConfig.getMaxSetSize());
+            writer.println("MaxPositiveSize=4");
+            writer.println("MaxNegativeSize=4");
+            
+            writer.println("DatasetName=" + datasetShortName);
+            writer.println("FPGInputPathP1=" + filteredPath);
+            
+            writer.println("shouldsubtract=false");
+            writer.println("totalnumofruns=100");
+            writer.println("coverages=0.11,0.13,0.15,0.17,0.19,0.21,0.23,0.25");
+            writer.println("balanced=true");
+            writer.println("TuneParameters=true");
+            writer.println("suppstotry=0.02");
+            writer.println("confstotry=0.4");
+            writer.println("TimeLimit=" + currentConfig.getTimeLimit());
+            writer.println("numoftops=10");
             writer.println("createHTMLoutput=true");
             writer.println("ConditionalMutualExclusiveSetsHTMLOutputPath=ConditionalMutualExclusiveSets.html");
             writer.println("MutualExclusiveSetsHTMLOutputPath=MutualExclusiveSets.html");
             writer.println("mutMtxDataset=other");
+            writer.println("tumorsOfInterest=" + currentConfig.getTumorsOfInterest());
+            writer.println("PvalueCutoff=" + currentConfig.getPValueCutoff());
+        }
+    }
+
+    private void writeDatasetMgrConfig(File file) throws IOException {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
+            
+            String rawPath = currentConfig.getDatasetName() != null ? currentConfig.getDatasetName() : "mutation_data"; 
+            String filteredPath = rawPath;
+            if (currentConfig.isUnformatted() && !rawPath.endsWith("_filtered.txt")) {
+                filteredPath = rawPath.endsWith(".txt") ? rawPath.substring(0, rawPath.length() - 4) + "_filtered.txt" : rawPath + "_filtered.txt";
+            }
+
+            writer.println("inputPath=" + rawPath);
+            writer.println("outputPath=" + filteredPath);
+            writer.println("sortUsingSupportCount=true");
+            writer.println("separateMutationType=false");
+            writer.println("removeChainMutations=true");
+            writer.println("removeMutationsWithMutationType=false");
+            writer.println("removeExistingDataAndAddAbsentData=false");
+            writer.println("splitMutationsWithComma=false");
+            writer.println("addSpace=false");
+            
+            /*// Hardcoded PanCancer parameters as expected by the jar internally
+            writer.println("inputPathPanCan=mutation_data/PanCancer/Raw/PanCan.txt");
+            writer.println("outputPathPanCan=mutation_data/PanCancer/PanCan-filtered-data.txt");
+            writer.println("sortEachPatientGenesUsingTheirSupportValue=true");
+            writer.println("printDataSeparatedAccordingToTheDatasetType=false");*/
         }
     }
 }
