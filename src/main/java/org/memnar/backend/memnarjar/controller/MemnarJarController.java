@@ -1,5 +1,6 @@
 package org.memnar.backend.memnarjar.controller;
 
+import jakarta.annotation.Nonnull;
 import org.memnar.backend.memnarjar.model.MemnarJarStatus;
 import org.memnar.backend.memnarjar.service.DataConverterService;
 import org.memnar.memnar.pnarpp.algorithm.PNARpp;
@@ -10,8 +11,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.*;
 
 @RestController
 @CrossOrigin
@@ -26,10 +26,15 @@ public class MemnarJarController {
         this.messagingTemplate = messagingTemplate;
     }
 
-
     @MessageMapping("/memnarjar/start")
     @SendTo("/memnarjar/status")
     public MemnarJarStatus runJar() throws Exception {
+
+        // Logging
+        PrintStream old = System.out;
+        PrintStream newPs = getPrintStream(old);
+
+        System.setOut(newPs);
         
         System.out.println("\n ----- PREPARING TO RUN ----- \n");
 
@@ -79,6 +84,9 @@ public class MemnarJarController {
             }
         }
 
+        System.out.flush();
+        System.setOut(old);
+
         if (latestOutputFile != null) {
             try (FileInputStream fis = new FileInputStream(latestOutputFile)) {
                 String output = new String(fis.readAllBytes());
@@ -90,5 +98,31 @@ public class MemnarJarController {
             return new MemnarJarStatus("Error", "Algorithm finished, but output file not found in 'output' directory.");
         }
 
+    }
+
+    @Nonnull
+    private PrintStream getPrintStream(PrintStream old) {
+        OutputStream os = new OutputStream() {
+            private final StringBuilder buffer = new StringBuilder();
+
+            @Override
+            public void write(int b) {
+                char c = (char) b;
+
+                if (c == '\n') {
+                    String line = buffer.toString();
+                    sendLog(line);
+                    old.println(line);
+                    buffer.setLength(0);
+                } else if (c != '\r') {
+                    buffer.append(c);
+                }
+            }
+        };
+        return new PrintStream(os);
+    }
+
+    private void sendLog(String log) {
+        messagingTemplate.convertAndSend("/memnarjar/status", new MemnarJarStatus("MEMNAR", log));
     }
 }
