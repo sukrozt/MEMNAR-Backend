@@ -3,6 +3,7 @@ package org.memnar.backend.memnarjar.controller;
 import jakarta.annotation.Nonnull;
 import org.memnar.backend.memnarjar.model.MemnarJarStatus;
 import org.memnar.backend.memnarjar.service.DataConverterService;
+import org.memnar.backend.memnarjar.service.ResultsService;
 import org.memnar.memnar.pnarpp.algorithm.PNARpp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -18,11 +19,13 @@ import java.io.*;
 public class MemnarJarController {
 
     private final DataConverterService dataConverterService;
+    private final ResultsService resultsService;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Autowired
-    public MemnarJarController(DataConverterService dataConverterService, SimpMessagingTemplate messagingTemplate) {
+    public MemnarJarController(DataConverterService dataConverterService, ResultsService resultsService, SimpMessagingTemplate messagingTemplate) {
         this.dataConverterService = dataConverterService;
+        this.resultsService = resultsService;
         this.messagingTemplate = messagingTemplate;
     }
 
@@ -31,77 +34,88 @@ public class MemnarJarController {
     public MemnarJarStatus runJar() throws Exception {
 
         // Logging
-        PrintStream old = System.out;
-        PrintStream newPs = getPrintStream(old);
+        PrintStream oldOut = System.out;
+        PrintStream oldErr = System.err;
+        PrintStream newOut = getPrintStream(oldOut, "INFO");
+        PrintStream newErr = getPrintStream(oldErr, "ERROR");
 
-        System.setOut(newPs);
+        System.setOut(newOut);
+        System.setErr(newErr);
         
         System.out.println("\n ----- PREPARING TO RUN ----- \n");
 
         // Alert the client immediately that the algorithm has started running
         messagingTemplate.convertAndSend("/memnarjar/status", new MemnarJarStatus("Running", "The MEMNAR algorithm is currently executing..."));
 
-        // Format the data first if needed (this also securely handles writing the necessary config files)
-        dataConverterService.processFormatting();
+        try {
+            // Format the data first if needed (this also securely handles writing the necessary config files)
+            dataConverterService.processFormatting();
+        } catch (IllegalStateException e) {
+            System.out.flush();
+            System.err.flush();
+            System.setOut(oldOut);
+            System.setErr(oldErr);
+            return new MemnarJarStatus("Error", e.getMessage());
+        }
 
         long startTime = System.currentTimeMillis();
         
-        // Ensure this method is thread-safe if multiple users connect!
-        PNARpp.runAlgorithm();
+        // Artık Spring Boot ile aynı JVM'de değil, ProcessBuilder ile yalıtılmış terminalde çalıştırıyoruz.
+        try {
+            String javaHome = System.getProperty("java.home");
+            String javaBin = javaHome + File.separator + "bin" + File.separator + "java";
+            String classpath = System.getProperty("java.class.path");
+
+            // Kendi yazdığımız özel Main metoduna sahip çalıştırıcı sınıfımızı (MemnarRunner) tetikliyoruz.
+            // Bu sınıfın içindeki main metodu arka planda temiz bir şekilde PNARpp.runAlgorithm() metodunu çağıracak.
+            ProcessBuilder pb = new ProcessBuilder(javaBin, "-cp", classpath, "org.memnar.backend.memnarjar.controller.MemnarRunner");
+            pb.redirectErrorStream(true); // Hata (err) ve Standart (out) logları birleştirir.
+
+            Process process = pb.start();
+
+            // Alt sürecin konsol çıktılarını anlık olarak okuyup web sayfasına basıyoruz
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.out.println(line); // System.out'u yakaladığımız için bu loglar anında frontend'e gider!
+                }
+            }
+
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                System.err.println("Algoritma beklenmedik bir şekilde kapandı. Çıkış Kodu: " + exitCode);
+            }
+        } catch (Exception e) {
+            System.err.println("ProcessBuilder çalıştırılırken hata oluştu: " + e.getMessage());
+            e.printStackTrace();
+        }
 
         long endTime = System.currentTimeMillis();
         long totalTime = endTime - startTime;
 
         System.out.println("\n -----FINISHED----- \n ELAPSED TIME : " + totalTime + " ms");
 
-        // Find the most recently created output directory and HTML file
-        File outputDir = new File("output");
-        File latestOutputFile = null;
-        long latestTime = 0;
-
-        if (outputDir.exists() && outputDir.isDirectory()) {
-            // 1. Check for files directly in the 'output' directory
-            File[] directFiles = outputDir.listFiles((dir, name) -> name.endsWith(".html"));
-            if (directFiles != null) {
-                for (File file : directFiles) {
-                    if (file.lastModified() > latestTime) {
-                        latestOutputFile = file;
-                        latestTime = file.lastModified();
-                    }
-                }
-            }
-
-            // 2. Check for files in subdirectories
-            File[] subDirs = outputDir.listFiles(File::isDirectory);
-            if (subDirs != null) {
-                for (File subDir : subDirs) {
-                    File htmlFile = new File(subDir, "MutualExclusiveSets.html");
-                    if (htmlFile.exists() && htmlFile.lastModified() > latestTime) {
-                        latestOutputFile = htmlFile;
-                        latestTime = htmlFile.lastModified();
-                    }
-                }
-            }
-        }
 
         System.out.flush();
-        System.setOut(old);
+        System.err.flush();
+        System.setOut(oldOut);
+        System.setErr(oldErr);
 
-        if (latestOutputFile != null) {
-            try (FileInputStream fis = new FileInputStream(latestOutputFile)) {
-                String output = new String(fis.readAllBytes());
+        try {
+            String output = resultsService.getLatestResultsContent();
+            if (output != null) {
                 return new MemnarJarStatus("FINISHED in " + totalTime + " ms", output);
-            } catch (Exception e) {
-                return new MemnarJarStatus("Error", "Algorithm finished, but failed to read the output file.");
+            } else {
+                return new MemnarJarStatus("Error", "Algorithm finished, but output file not found in 'output' directory.");
             }
-        } else {
-            return new MemnarJarStatus("Error", "Algorithm finished, but output file not found in 'output' directory.");
+        } catch (Exception e) {
+            return new MemnarJarStatus("Error", "Algorithm finished, but failed to read the output file.");
         }
 
     }
 
     @Nonnull
-    private PrintStream getPrintStream(PrintStream old) {
+    private PrintStream getPrintStream(PrintStream old, String level) {
         OutputStream os = new OutputStream() {
             private final StringBuilder buffer = new StringBuilder();
 
@@ -111,7 +125,7 @@ public class MemnarJarController {
 
                 if (c == '\n') {
                     String line = buffer.toString();
-                    sendLog(line);
+                    sendLog("[" + level + "] " + line);
                     old.println(line);
                     buffer.setLength(0);
                 } else if (c != '\r') {

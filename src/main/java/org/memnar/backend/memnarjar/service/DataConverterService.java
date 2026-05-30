@@ -25,13 +25,13 @@ public class DataConverterService {
         
         System.out.println("[DEBUG - DataConverterService] Checking if formatting is needed. isUnformatted: " + config.isUnformatted());
         
+        String rawInputPath = config.getDatasetName();
+        if (rawInputPath == null || rawInputPath.trim().isEmpty()) {
+            throw new IllegalStateException("Dataset path is empty. Please upload a file first.");
+        }
+
         if (config.isUnformatted()) {
             messagingTemplate.convertAndSend("/memnarjar/status", new MemnarJarStatus("Formatting", "Formatting raw data..."));
-            String rawInputPath = config.getDatasetName();
-            
-            if (rawInputPath == null || rawInputPath.trim().isEmpty()) {
-                throw new IllegalStateException("Dataset path is empty. Please upload a file first.");
-            }
 
             // IMPORTANT: Write the configuration file AND setup resources (res folder) 
             // BEFORE running the DataConverter, because the DataConverter requires config.properties to exist!

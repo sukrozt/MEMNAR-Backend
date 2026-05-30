@@ -2,8 +2,6 @@ package org.memnar.backend.memnarjar.service;
 
 import org.memnar.backend.memnarjar.model.ConfigData;
 import org.springframework.stereotype.Service;
-import org.springframework.context.event.EventListener;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -25,7 +23,7 @@ public class ConfigService {
         
         // BUGFIX: Prevent the frontend from overwriting a valid dataset name with null or empty values
         String incomingName = newConfig.getDatasetName();
-        if (incomingName == null || incomingName.trim().isEmpty() || incomingName.equals("mutation_data")) {
+        if (incomingName == null || incomingName.trim().isEmpty()) {
             newConfig.setDatasetName(this.currentConfig.getDatasetName());
         }
 
@@ -92,7 +90,7 @@ public class ConfigService {
     private void writeMainConfig(File file) throws IOException {
         try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
             
-            String rawPath = currentConfig.getDatasetName() != null ? currentConfig.getDatasetName() : "mutation_data"; 
+            String rawPath = currentConfig.getDatasetName() != null ? currentConfig.getDatasetName() : ""; 
             String filteredPath = rawPath;
             
             // Pre-calculate the filtered path so the main algorithm knows where to look
@@ -134,21 +132,29 @@ public class ConfigService {
             writer.println("TuneParameters=true");
             writer.println("suppstotry=0.02");
             writer.println("confstotry=0.4");
-            writer.println("TimeLimit=" + currentConfig.getTimeLimit());
+            
+            // FIX: TimeLimit 0 ise algoritma hemen durur, varsayılan olarak 60000 yapıyoruz.
+            writer.println("TimeLimit=" + (currentConfig.getTimeLimit() <= 0 ? 60000 : currentConfig.getTimeLimit()));
             writer.println("numoftops=10");
             writer.println("createHTMLoutput=true");
             writer.println("ConditionalMutualExclusiveSetsHTMLOutputPath=ConditionalMutualExclusiveSets.html");
             writer.println("MutualExclusiveSetsHTMLOutputPath=MutualExclusiveSets.html");
+            
+            // NullPointerException hatasını önlemek için sabitlenmesi gereken parametreler
             writer.println("mutMtxDataset=other");
-            writer.println("tumorsOfInterest=" + currentConfig.getTumorsOfInterest());
-            writer.println("PvalueCutoff=" + currentConfig.getPValueCutoff());
+            writer.println("tumorsOfInterest=null");
+            
+            // FIX: Algoritmanın klasör okumaya çalışıp çökmesini (Is a directory hatasını) engeller.
+            writer.println("Rawinput=" + rawPath);
+
+            writer.println("PvalueCutoff=" + (currentConfig.getPValueCutoff() <= 0.0 ? 0.05 : currentConfig.getPValueCutoff()));
         }
     }
 
     private void writeDatasetMgrConfig(File file) throws IOException {
         try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
             
-            String rawPath = currentConfig.getDatasetName() != null ? currentConfig.getDatasetName() : "mutation_data"; 
+            String rawPath = currentConfig.getDatasetName() != null ? currentConfig.getDatasetName() : ""; 
             String filteredPath = rawPath;
             if (currentConfig.isUnformatted() && !rawPath.endsWith("_filtered.txt")) {
                 filteredPath = rawPath.endsWith(".txt") ? rawPath.substring(0, rawPath.length() - 4) + "_filtered.txt" : rawPath + "_filtered.txt";
