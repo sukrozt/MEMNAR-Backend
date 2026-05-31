@@ -2,17 +2,49 @@ package org.memnar.backend.memnarjar.service;
 
 import org.memnar.backend.memnarjar.model.ConfigData;
 import org.springframework.stereotype.Service;
+import jakarta.annotation.PostConstruct;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.Properties;
 
 @Service
 public class ConfigService {
 
     private ConfigData currentConfig = new ConfigData();
+
+    @PostConstruct
+    public void loadConfigFromFile() {
+        File configFile = new File("res/config.properties");
+        if (configFile.exists()) {
+            try (FileInputStream fis = new FileInputStream(configFile)) {
+                Properties props = new Properties();
+                props.load(fis);
+
+                String datasetName = props.getProperty("Rawinput");
+                if (datasetName != null && !datasetName.isEmpty()) {
+                    currentConfig.setDatasetName(datasetName);
+                }
+
+                String minSupp = props.getProperty("minsupp");
+                if (minSupp != null) {
+                    currentConfig.setMinSupp(Double.parseDouble(minSupp));
+                }
+
+                String minConf = props.getProperty("minconf");
+                if (minConf != null) {
+                    currentConfig.setMinConf(Double.parseDouble(minConf));
+                }
+                System.out.println("[DEBUG - ConfigService] Successfully loaded previous config from file. Dataset: " + currentConfig.getDatasetName());
+            } catch (Exception e) {
+                System.err.println("Failed to load config from file: " + e.getMessage());
+            }
+        }
+    }
 
     public ConfigData getConfig() {
         return currentConfig;

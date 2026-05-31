@@ -25,8 +25,8 @@ public class ResultsController {
         this.resultsService = resultsService;
     }
 
-    @GetMapping(value = "/results", produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<Resource> getLatestResults() {
+    @GetMapping(value = "/results/normal", produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<Resource> getNormalResults() {
         File file = resultsService.getLatestResultsFile();
         if (file != null && file.exists()) {
             return ResponseEntity.ok(new FileSystemResource(file));
@@ -43,12 +43,24 @@ public class ResultsController {
         return ResponseEntity.notFound().build();
     }
 
-    @GetMapping(value = "/IndividualFigures/{filename:.+}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Resource> getFigure(@PathVariable String filename) {
+    // Grafiklerin her iki adresten de (path kayması sorunu olmadan) çekilebilmesi için
+    @GetMapping(value = {"/IndividualFigures/{filename:.+}", "/results/IndividualFigures/{filename:.+}", "/results/normal/IndividualFigures/{filename:.+}"}, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Resource> getNormalFigure(@PathVariable String filename) {
         File htmlFile = resultsService.getLatestResultsFile();
         if (htmlFile != null && htmlFile.exists()) {
-            // HTML dosyasının bulunduğu klasördeki IndividualFigures alt klasöründen ilgili dosyayı gönder
             File figureFile = new File(htmlFile.getParentFile(), "IndividualFigures" + File.separator + filename);
+            if (figureFile.exists()) {
+                return ResponseEntity.ok(new FileSystemResource(figureFile));
+            }
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping(value = {"/ConditionalIndividualFigures/{filename:.+}", "/results/ConditionalIndividualFigures/{filename:.+}", "/results/conditional/ConditionalIndividualFigures/{filename:.+}"}, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Resource> getConditionalFigure(@PathVariable String filename) {
+        File htmlFile = resultsService.getLatestResultsFile();
+        if (htmlFile != null && htmlFile.exists()) {
+            File figureFile = new File(htmlFile.getParentFile(), "ConditionalIndividualFigures" + File.separator + filename);
             if (figureFile.exists()) {
                 return ResponseEntity.ok(new FileSystemResource(figureFile));
             }

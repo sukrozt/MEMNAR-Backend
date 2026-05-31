@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -32,8 +33,9 @@ public class SecurityConfiguration {
             .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Global CORS izni eklendi
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Tarayıcının gönderdiği CORS ön-isteklerine izin ver
                 // Frontend'in ulaşması gereken tüm endpointlere izin verildi
-                .requestMatchers("/api/auth/**", "/ws/**", "/websocket-connect/**", "/memnarjar/**", "/api/config", "/results/**", "/IndividualFigures/**", "/h2-console/**").permitAll()
+                .requestMatchers("/api/auth/**", "/ws/**", "/websocket-connect/**", "/memnarjar/**", "/api/config", "/results/**", "/IndividualFigures/**", "/ConditionalIndividualFigures/**", "/*.js", "/*.css", "/h2-console/**").permitAll()
                 .anyRequest().authenticated()
             )
             .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))

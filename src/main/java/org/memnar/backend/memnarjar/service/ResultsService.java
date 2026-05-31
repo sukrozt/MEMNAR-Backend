@@ -86,7 +86,20 @@ public class ResultsService {
     public String getLatestResultsContent(String targetFileName) throws IOException {
         File file = getLatestResultsFile(targetFileName);
         if (file != null) {
-            return new String(Files.readAllBytes(file.toPath()));
+            String htmlContent = new String(Files.readAllBytes(file.toPath()));
+            
+            // Algoritmanın ürettiği HTML dosyasında <head> etiketi bulunmayabilir.
+            // Bu yüzden <base> etiketini içeriğin en başına veya <!DOCTYPE html> sonrasına zorla enjekte ediyoruz.
+            String baseTag = "<base href=\"http://localhost:8080/\">\n";
+            if (htmlContent.toLowerCase().contains("<!doctype html>")) {
+                htmlContent = htmlContent.replaceFirst("(?i)<!doctype html>", "<!DOCTYPE html>\n" + baseTag);
+            } else if (htmlContent.toLowerCase().contains("<html")) {
+                htmlContent = htmlContent.replaceFirst("(?i)<html[^>]*>", "$0\n" + baseTag);
+            } else {
+                // Hiçbir ana etiket yoksa (ham D3 çıktısı ise) dosyanın en başına ekle
+                htmlContent = baseTag + htmlContent;
+            }
+            return htmlContent;
         }
         return null;
     }

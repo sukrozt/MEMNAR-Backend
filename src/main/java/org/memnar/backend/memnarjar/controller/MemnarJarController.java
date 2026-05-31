@@ -68,7 +68,7 @@ public class MemnarJarController {
 
             // Kendi yazdığımız özel Main metoduna sahip çalıştırıcı sınıfımızı (MemnarRunner) tetikliyoruz.
             // Bu sınıfın içindeki main metodu arka planda temiz bir şekilde PNARpp.runAlgorithm() metodunu çağıracak.
-            ProcessBuilder pb = new ProcessBuilder(javaBin, "-cp", classpath, "org.memnar.backend.memnarjar.controller.MemnarRunner");
+            ProcessBuilder pb = new ProcessBuilder(javaBin, "-cp", classpath, "org.memnar.backend.memnarjar.config.MemnarRunner");
             pb.redirectErrorStream(true); // Hata (err) ve Standart (out) logları birleştirir.
 
             Process process = pb.start();
