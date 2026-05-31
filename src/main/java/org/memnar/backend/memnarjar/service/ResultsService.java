@@ -19,6 +19,10 @@ public class ResultsService {
     }
 
     public File getLatestResultsFile() {
+        return getLatestResultsFile("MutualExclusiveSets.html");
+    }
+
+    public File getLatestResultsFile(String targetFileName) {
         ConfigData config = configService.getConfig();
 
         // 1. Construct the expected dynamic output folder based on the algorithm's naming convention
@@ -44,7 +48,7 @@ public class ResultsService {
             // A. Attempt to fetch the exact file generated for the current configuration
             File exactDir = new File(outputDir, expectedDirName);
             if (exactDir.exists() && exactDir.isDirectory()) {
-                File exactHtml = new File(exactDir, "MutualExclusiveSets.html");
+                File exactHtml = new File(exactDir, targetFileName);
                 if (exactHtml.exists()) {
                     System.out.println("[DEBUG - ResultsService] Found exact HTML results at: " + exactHtml.getPath());
                     return exactHtml;
@@ -53,7 +57,7 @@ public class ResultsService {
             System.out.println("[DEBUG - ResultsService] Exact path not found: " + exactDir.getPath() + ". Falling back to latest.");
 
             // B. Fallback: Check for files directly in the 'output' directory
-            File[] directFiles = outputDir.listFiles((dir, name) -> name.endsWith(".html"));
+            File[] directFiles = outputDir.listFiles((dir, name) -> name.equals(targetFileName));
             if (directFiles != null) {
                 for (File file : directFiles) {
                     if (file.lastModified() > latestTime) {
@@ -67,7 +71,7 @@ public class ResultsService {
             File[] subDirs = outputDir.listFiles(File::isDirectory);
             if (subDirs != null) {
                 for (File subDir : subDirs) {
-                    File htmlFile = new File(subDir, "MutualExclusiveSets.html");
+                    File htmlFile = new File(subDir, targetFileName);
                     if (htmlFile.exists() && htmlFile.lastModified() > latestTime) {
                         latestOutputFile = htmlFile;
                         latestTime = htmlFile.lastModified();
@@ -79,11 +83,15 @@ public class ResultsService {
         return latestOutputFile;
     }
 
-    public String getLatestResultsContent() throws IOException {
-        File file = getLatestResultsFile();
+    public String getLatestResultsContent(String targetFileName) throws IOException {
+        File file = getLatestResultsFile(targetFileName);
         if (file != null) {
             return new String(Files.readAllBytes(file.toPath()));
         }
         return null;
+    }
+
+    public String getLatestResultsContent() throws IOException {
+        return getLatestResultsContent("MutualExclusiveSets.html");
     }
 }

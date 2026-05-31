@@ -1,4 +1,4 @@
-package org.memnar.backend.memnarjar.controller;
+package org.memnar.backend.memnarjar.config;
 
 import org.memnar.memnar.pnarpp.algorithm.PNARpp;
 

@@ -34,6 +34,15 @@ public class ResultsController {
         return ResponseEntity.notFound().build();
     }
 
+    @GetMapping(value = "/results/conditional", produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<Resource> getConditionalResults() {
+        File file = resultsService.getLatestResultsFile("ConditionalMutualExclusiveSets.html");
+        if (file != null && file.exists()) {
+            return ResponseEntity.ok(new FileSystemResource(file));
+        }
+        return ResponseEntity.notFound().build();
+    }
+
     @GetMapping(value = "/IndividualFigures/{filename:.+}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Resource> getFigure(@PathVariable String filename) {
         File htmlFile = resultsService.getLatestResultsFile();
