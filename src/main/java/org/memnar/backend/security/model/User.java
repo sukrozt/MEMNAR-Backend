@@ -5,6 +5,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -21,12 +22,24 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserConfig> configs = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserOutput> outputs = new ArrayList<>();
+
     // Getter and Setter methods
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
     public void setUsername(String username) { this.username = username; }
     public void setPassword(String password) { this.password = password; }
+
+    public List<UserConfig> getConfigs() { return configs; }
+    public void setConfigs(List<UserConfig> configs) { this.configs = configs; }
+
+    public List<UserOutput> getOutputs() { return outputs; }
+    public void setOutputs(List<UserOutput> outputs) { this.outputs = outputs; }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
