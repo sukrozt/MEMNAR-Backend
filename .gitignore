@@ -5,7 +5,6 @@ target/
 !**/src/test/**/target/
 output/
 res/
-resources/
 libraries/
 mutation_data/
 mutation_data.zip
