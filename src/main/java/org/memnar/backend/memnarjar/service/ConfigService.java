@@ -53,13 +53,23 @@ public class ConfigService {
     public void updateConfig(ConfigData newConfig) {
         System.out.println("[DEBUG - ConfigService] updateConfig called! Old DatasetName: " + this.currentConfig.getDatasetName() + " | New DatasetName: " + newConfig.getDatasetName());
         
-        // BUGFIX: Prevent the frontend from overwriting a valid dataset name with null or empty values
         String incomingName = newConfig.getDatasetName();
-        if (incomingName == null || incomingName.trim().isEmpty()) {
-            newConfig.setDatasetName(this.currentConfig.getDatasetName());
+        if (incomingName != null && !incomingName.trim().isEmpty()) {
+            this.currentConfig.setDatasetName(incomingName);
         }
 
-        this.currentConfig = newConfig;
+        // Diğer tüm ayar alanlarını gelen nesneden alarak güncelle.
+        this.currentConfig.setMinSupp(newConfig.getMinSupp());
+        this.currentConfig.setMinConf(newConfig.getMinConf());
+        this.currentConfig.setMinZScore(newConfig.getMinZScore());
+        this.currentConfig.setSortByPathway(newConfig.isSortByPathway());
+        this.currentConfig.setFindMutualExclusiveSets(newConfig.isFindMutualExclusiveSets());
+        this.currentConfig.setFindConditionalMutualExclusiveSets(newConfig.isFindConditionalMutualExclusiveSets());
+        this.currentConfig.setMaxSetSize(newConfig.getMaxSetSize());
+        this.currentConfig.setTimeLimit(newConfig.getTimeLimit());
+        this.currentConfig.setPValueCutoff(newConfig.getPValueCutoff());
+        this.currentConfig.setUnformatted(newConfig.isUnformatted());
+
         try {
             persistConfigFile();
             System.out.println("Configuration updated and saved to file.");

@@ -87,9 +87,7 @@ public class ResultsService {
         File file = getLatestResultsFile(targetFileName);
         if (file != null) {
             String htmlContent = new String(Files.readAllBytes(file.toPath()));
-            
-            // Algoritmanın ürettiği HTML dosyasında <head> etiketi bulunmayabilir.
-            // Bu yüzden <base> etiketini içeriğin en başına veya <!DOCTYPE html> sonrasına zorla enjekte ediyoruz.
+
             String baseTag = "<base href=\"http://localhost:8080/\">\n";
             if (htmlContent.toLowerCase().contains("<!doctype html>")) {
                 htmlContent = htmlContent.replaceFirst("(?i)<!doctype html>", "<!DOCTYPE html>\n" + baseTag);

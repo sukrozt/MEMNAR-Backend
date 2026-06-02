@@ -4,12 +4,11 @@ import jakarta.annotation.Nonnull;
 import org.memnar.backend.memnarjar.model.MemnarJarStatus;
 import org.memnar.backend.memnarjar.service.DataConverterService;
 import org.memnar.backend.memnarjar.service.ResultsService;
-import org.memnar.backend.security.model.UserOutput;
-import org.memnar.backend.security.repository.UserOutputRepository;
 import org.memnar.backend.security.repository.UserRepository;
 import org.memnar.memnar.pnarpp.algorithm.PNARpp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -17,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.*;
 import java.security.Principal;
+import java.util.Map;
 
 @RestController
 @CrossOrigin
@@ -25,21 +25,19 @@ public class MemnarJarController {
     private final DataConverterService dataConverterService;
     private final ResultsService resultsService;
     private final SimpMessagingTemplate messagingTemplate;
-    private final UserOutputRepository userOutputRepository;
     private final UserRepository userRepository;
 
     @Autowired
-    public MemnarJarController(DataConverterService dataConverterService, ResultsService resultsService, SimpMessagingTemplate messagingTemplate, UserOutputRepository userOutputRepository, UserRepository userRepository) {
+    public MemnarJarController(DataConverterService dataConverterService, ResultsService resultsService, SimpMessagingTemplate messagingTemplate, UserRepository userRepository) {
         this.dataConverterService = dataConverterService;
         this.resultsService = resultsService;
         this.messagingTemplate = messagingTemplate;
-        this.userOutputRepository = userOutputRepository;
         this.userRepository = userRepository;
     }
 
     @MessageMapping("/memnarjar/start")
     @SendTo("/memnarjar/status")
-    public MemnarJarStatus runJar(Principal principal) throws Exception {
+    public MemnarJarStatus runJar(@Payload(required = false) Map<String, String> payload, Principal principal) throws Exception {
 
         // Logging
         PrintStream oldOut = System.out;
@@ -68,11 +66,33 @@ public class MemnarJarController {
 
         long startTime = System.currentTimeMillis();
         
+        // Artık Spring Boot ile aynı JVM'de değil, ProcessBuilder ile yalıtılmış terminalde çalıştırıyoruz.
         try {
-            // Spring Boot ile aynı JVM üzerinde algoritmayı doğrudan çalıştırıyoruz.
-            PNARpp.runAlgorithm();
+            String javaHome = System.getProperty("java.home");
+            String javaBin = javaHome + File.separator + "bin" + File.separator + "java";
+            String classpath = System.getProperty("java.class.path");
+
+            // Kendi yazdığımız özel Main metoduna sahip çalıştırıcı sınıfımızı (MemnarRunner) tetikliyoruz.
+            // Bu sınıfın içindeki main metodu arka planda temiz bir şekilde PNARpp.runAlgorithm() metodunu çağıracak.
+            ProcessBuilder pb = new ProcessBuilder(javaBin, "-cp", classpath, "org.memnar.backend.memnarjar.config.MemnarRunner");
+            pb.redirectErrorStream(true); // Hata (err) ve Standart (out) logları birleştirir.
+
+            Process process = pb.start();
+
+            // Alt sürecin konsol çıktılarını anlık olarak okuyup web sayfasına basıyoruz
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.out.println(line); // System.out'u yakaladığımız için bu loglar anında frontend'e gider!
+                }
+            }
+
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                System.err.println("Algoritma beklenmedik bir şekilde kapandı. Çıkış Kodu: " + exitCode);
+            }
         } catch (Exception e) {
-            System.err.println("Algoritma çalıştırılırken hata oluştu: " + e.getMessage());
+            System.err.println("ProcessBuilder çalıştırılırken hata oluştu: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -93,18 +113,6 @@ public class MemnarJarController {
             
             if (output != null) {
                 
-                // Eğer kullanıcı oturum açmışsa dosyanın yolunu veritabanına UserOutput tablosuna kaydet
-                if (principal != null && outputFile != null) {
-                    userRepository.findByUsername(principal.getName()).ifPresent(user -> {
-                        UserOutput userOutput = new UserOutput();
-                        userOutput.setUser(user);
-                        // Dosyanın sunucudaki fiziksel yolunu (örn: "output/mutation_data.../MutualExclusiveSets.html") kaydediyoruz
-                        userOutput.setFilePath(outputFile.getPath()); 
-                        userOutputRepository.save(userOutput);
-                        System.out.println("Output veritabanına kaydedildi. Kullanıcı: " + user.getUsername());
-                    });
-                }
-
                 return new MemnarJarStatus("FINISHED in " + totalTime + " ms", output);
             } else {
                 return new MemnarJarStatus("Error", "Algorithm finished, but output file not found in 'output' directory.");

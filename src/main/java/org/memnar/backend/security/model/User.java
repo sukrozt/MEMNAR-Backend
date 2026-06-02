@@ -25,9 +25,6 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserConfig> configs = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserOutput> outputs = new ArrayList<>();
-
     // Getter and Setter methods
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -37,9 +34,6 @@ public class User implements UserDetails {
 
     public List<UserConfig> getConfigs() { return configs; }
     public void setConfigs(List<UserConfig> configs) { this.configs = configs; }
-
-    public List<UserOutput> getOutputs() { return outputs; }
-    public void setOutputs(List<UserOutput> outputs) { this.outputs = outputs; }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

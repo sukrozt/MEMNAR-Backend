@@ -9,7 +9,6 @@ import org.memnar.backend.security.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,14 +20,12 @@ public class ConfigController {
     private final ConfigService configService;
     private final UserConfigRepository userConfigRepository;
     private final UserRepository userRepository;
-    private final ObjectMapper objectMapper;
 
     @Autowired
-    public ConfigController(ConfigService configService, UserConfigRepository userConfigRepository, UserRepository userRepository, ObjectMapper objectMapper) {
+    public ConfigController(ConfigService configService, UserConfigRepository userConfigRepository, UserRepository userRepository) {
         this.configService = configService;
         this.userConfigRepository = userConfigRepository;
         this.userRepository = userRepository;
-        this.objectMapper = objectMapper;
     }
 
     // This fixes the 404 error on GET requests (fetching config on load)
@@ -46,16 +43,19 @@ public class ConfigController {
             String username = authentication.getName();
             userRepository.findByUsername(username).ifPresent(user -> {
                 try {
-                    // 2. Gelen Config nesnesini JSON formatına çevir
-                    String configJson = objectMapper.writeValueAsString(newConfig);
-                    
-                    // 3. Veritabanına kaydet
+                    // 2. Veritabanına kaydet
                     UserConfig userConfig = new UserConfig();
                     userConfig.setUser(user);
-                    userConfig.setConfigJson(configJson);
+                    userConfig.setDatasetName(newConfig.getDatasetName());
+                    userConfig.setMinSupp(newConfig.getMinSupp());
+                    userConfig.setMinConf(newConfig.getMinConf());
+                    userConfig.setMinZScore(newConfig.getMinZScore());
+                    userConfig.setMaxSetSize(newConfig.getMaxSetSize());
+                    userConfig.setPValueCutoff(newConfig.getPValueCutoff());
+                    userConfig.setUnformatted(newConfig.isUnformatted());
                     userConfigRepository.save(userConfig);
                 } catch (Exception e) {
-                    System.err.println("Config JSON'a çevrilirken hata: " + e.getMessage());
+                    System.err.println("Config kaydedilirken hata: " + e.getMessage());
                 }
             });
         }

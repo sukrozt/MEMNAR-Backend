@@ -7,36 +7,129 @@
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-    * {
-      font-family: Arial;
-    }
-    .pagination{
-        position: relative;
-        left: -50%;
-        float: left;
-    }
-    .pagination a {
-        color: black;
-        float: left;
-        padding: 8px 16px;
-        text-decoration: none;
-        transition: background-color .3s;
+
+    /* MEMNAR Modern Theme - Tailwind Inspired */
+    :root {
+    --surface: #f9faf8;
+    --surface-container: #ffffff;
+    --surface-sidebar: #f3f4f2;
+    --surface-soft: #eef2ee;
+    --primary: #43664d;
+    --primary-soft: #84a98c;
+    --secondary: #655b6b;
+    --secondary-soft: #e9e3ec;
+    --text-main: #191c1b;
+    --text-muted: #655b6b;
+    --border-soft: #e7ebe6;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
 
-    /* Style the active/current link */
-    .pagination a.active {
-        background-color: #4CAF50;
-        color: white;
+    body {
+    background-color: var(--surface) !important;
+    color: var(--text-main) !important;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    line-height: 1.7 !important;
+    margin: 0 auto !important;
+    padding: 32px !important;
+    max-width: 1200px !important; /* İçeriğin çok yayılmasını engeller, ortalar */
+    font-size: 15px !important;
     }
 
-    /* Add a grey background color on mouse-over */
-    .pagination a:hover:not(.active) {background-color: #ddd;}
-
-    .wrapper {
-        position: relative;
-        left: 50%;
-        float: left;
+    /* Başlıklar */
+    h1, h2, h3, h4, h5, h6 {
+    color: var(--primary) !important;
+    font-weight: 600 !important;
+    line-height: 1.3 !important;
+    margin-top: 2.5rem !important;
+    margin-bottom: 1rem !important;
     }
+    h1 { 
+    font-size: 2.25rem !important; 
+    border-bottom: 2px solid var(--border-soft) !important; 
+    padding-bottom: 0.5rem !important; 
+    }
+    h2 { font-size: 1.75rem !important; }
+    h3 { font-size: 1.25rem !important; color: var(--secondary) !important; }
+
+    /* Tablolar (MEMNAR Veri Çıktıları) */
+    table {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    background-color: var(--surface-container) !important;
+    border-radius: 12px !important;
+    border: 1px solid var(--border-soft) !important;
+    overflow: hidden !important;
+    box-shadow: var(--shadow-sm) !important;
+    margin: 2rem 0 !important;
+    }
+    th, td {
+    padding: 16px 20px !important;
+    text-align: left !important;
+    border-bottom: 1px solid var(--border-soft) !important;
+    }
+    th {
+    background-color: var(--surface-soft) !important;
+    color: var(--primary) !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    }
+    tr:last-child td {
+    border-bottom: none !important;
+    }
+    tr:hover td {
+    background-color: var(--surface-sidebar) !important;
+    }
+
+    /* SVG ve D3.js Grafikleri */
+    svg {
+    background-color: var(--surface-container) !important;
+    border: 1px solid var(--border-soft) !important;
+    border-radius: 12px !important;
+    box-shadow: var(--shadow-sm) !important;
+    margin: 1.5rem 0 !important;
+    max-width: 100% !important;
+    height: auto !important;
+    }
+
+    /* Grafik İçi Düğüm Yazıları ve Değerler */
+    text {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-size: 12px !important;
+    fill: var(--text-main) !important;
+    }
+
+    /* Araç İpuçları (Mouse ile üzerine gelince çıkan kutucuklar) */
+    .tooltip, #tooltip, div.tooltip {
+    position: absolute !important;
+    background-color: var(--surface-container) !important;
+    border: 1px solid var(--border-soft) !important;
+    color: var(--text-main) !important;
+    padding: 12px 16px !important;
+    border-radius: 8px !important;
+    box-shadow: var(--shadow-md) !important;
+    font-size: 0.875rem !important;
+    pointer-events: none !important;
+    z-index: 1000 !important;
+    }
+
+    /* Linkler ve Butonlar */
+    a {
+    color: var(--primary) !important;
+    text-decoration: none !important;
+    font-weight: 500 !important;
+    border-bottom: 1px transparent !important;
+    transition: all 0.2s ease !important;
+    }
+    a:hover {
+    color: var(--primary-soft) !important;
+    border-bottom: 1px solid var(--primary-soft) !important;
+    }
+
+
 </style>
 </head>
 <body>
@@ -58,7 +151,7 @@ __REPEATBEGIN__
 <div id="MEGS_ID_">
     <div class="setnameandpvalue"><b>__SETID__. _SET_</b> , p-value : _PVALUE_</div><br />
 <div id="mutex_ID_"></div>
-<button id="save-svg_ID_">Save as SVG</button>
+<!-- <button id="save-svg_ID_">Save as SVG</button> -->
 <div id="svg-image_ID_"></div>
 <b>Rules: </b>
 <ul id="Rules_ID_">
