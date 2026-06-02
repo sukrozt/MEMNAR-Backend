@@ -86,4 +86,7 @@ public class UserConfig {
     public boolean isUnformatted() { return isUnformatted; }
     public void setUnformatted(boolean isUnformatted) { this.isUnformatted = isUnformatted; }
 
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
 }
