@@ -43,6 +43,24 @@ public class ResultsController {
         return ResponseEntity.notFound().build();
     }
 
+    @GetMapping(value = "/results/rules", produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<Resource> getRules() {
+        File file = resultsService.getLatestResultsFile("rules.txt");
+        if (file != null && file.exists()) {
+            return ResponseEntity.ok(new FileSystemResource(file));
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping(value = "/results/itemsets", produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<Resource> getItemSets() {
+        File file = resultsService.getLatestResultsFile("itemsets.txt");
+        if (file != null && file.exists()) {
+            return ResponseEntity.ok(new FileSystemResource(file));
+        }
+        return ResponseEntity.notFound().build();
+    }
+
     // Grafiklerin her iki adresten de (path kayması sorunu olmadan) çekilebilmesi için
     @GetMapping(value = {"/IndividualFigures/{filename:.+}", "/results/IndividualFigures/{filename:.+}", "/results/normal/IndividualFigures/{filename:.+}"}, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Resource> getNormalFigure(@PathVariable String filename) {
