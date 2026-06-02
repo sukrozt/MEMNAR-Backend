@@ -23,7 +23,7 @@ public class DataConverterService {
     public void processFormatting() throws Exception {
         ConfigData config = configService.getConfig();
         
-        System.out.println("[DEBUG - DataConverterService] Checking if formatting is needed. isUnformatted: " + config.isUnformatted());
+        // System.out.println("[DEBUG - DataConverterService] Checking if formatting is needed. isUnformatted: " + config.isUnformatted());
         
         String rawInputPath = config.getDatasetName();
         if (rawInputPath == null || rawInputPath.trim().isEmpty()) {
@@ -35,10 +35,10 @@ public class DataConverterService {
 
             // IMPORTANT: Write the configuration file AND setup resources (res folder) 
             // BEFORE running the DataConverter, because the DataConverter requires config.properties to exist!
-            System.out.println("[DEBUG - DataConverterService] Writing config file for DataConverter. Raw input: " + rawInputPath);
+            // System.out.println("[DEBUG - DataConverterService] Writing config file for DataConverter. Raw input: " + rawInputPath);
             configService.writeConfigFile();
             
-            System.out.println("[DEBUG - DataConverterService] Detected unformatted data. Running DataConverter on: " + rawInputPath);
+            // System.out.println("[DEBUG - DataConverterService] Detected unformatted data. Running DataConverter on: " + rawInputPath);
             fileService.runDataConverter(rawInputPath);
             
             // Calculate the automatically generated output path

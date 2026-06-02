@@ -41,7 +41,7 @@ public class FileController {
             ConfigData config = configService.getConfig();
             String exactTextFilePath = savedTxt.toString(); 
             config.setDatasetName(exactTextFilePath); 
-            System.out.println("[DEBUG - FileController] Set DatasetName in config to: " + exactTextFilePath);
+            // System.out.println("[DEBUG - FileController] Set DatasetName in config to: " + exactTextFilePath);
             configService.updateConfig(config);
             
             return new MemnarJarStatus("Success", "Txt uploaded and ready for MEMNAR.");

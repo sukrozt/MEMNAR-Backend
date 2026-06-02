@@ -50,11 +50,11 @@ public class ResultsService {
             if (exactDir.exists() && exactDir.isDirectory()) {
                 File exactHtml = new File(exactDir, targetFileName);
                 if (exactHtml.exists()) {
-                    System.out.println("[DEBUG - ResultsService] Found exact HTML results at: " + exactHtml.getPath());
+                    // System.out.println("[DEBUG - ResultsService] Found exact HTML results at: " + exactHtml.getPath());
                     return exactHtml;
                 }
             }
-            System.out.println("[DEBUG - ResultsService] Exact path not found: " + exactDir.getPath() + ". Falling back to latest.");
+            // System.out.println("[DEBUG - ResultsService] Exact path not found: " + exactDir.getPath() + ". Falling back to latest.");
 
             // B. Fallback: Check for files directly in the 'output' directory
             File[] directFiles = outputDir.listFiles((dir, name) -> name.equals(targetFileName));
