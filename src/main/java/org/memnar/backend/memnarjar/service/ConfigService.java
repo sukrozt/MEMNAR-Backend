@@ -39,7 +39,7 @@ public class ConfigService {
                 if (minConf != null) {
                     currentConfig.setMinConf(Double.parseDouble(minConf));
                 }
-                System.out.println("[DEBUG - ConfigService] Successfully loaded previous config from file. Dataset: " + currentConfig.getDatasetName());
+                // System.out.println("[DEBUG - ConfigService] Successfully loaded previous config from file. Dataset: " + currentConfig.getDatasetName());
             } catch (Exception e) {
                 System.err.println("Failed to load config from file: " + e.getMessage());
             }
@@ -51,7 +51,7 @@ public class ConfigService {
     }
 
     public void updateConfig(ConfigData newConfig) {
-        System.out.println("[DEBUG - ConfigService] updateConfig called! Old DatasetName: " + this.currentConfig.getDatasetName() + " | New DatasetName: " + newConfig.getDatasetName());
+        // System.out.println("[DEBUG - ConfigService] updateConfig called! Old DatasetName: " + this.currentConfig.getDatasetName() + " | New DatasetName: " + newConfig.getDatasetName());
         
         String incomingName = newConfig.getDatasetName();
         if (incomingName != null && !incomingName.trim().isEmpty()) {
