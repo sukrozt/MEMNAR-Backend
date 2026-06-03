@@ -66,33 +66,10 @@ public class MemnarJarController {
 
         long startTime = System.currentTimeMillis();
         
-        // Artık Spring Boot ile aynı JVM'de değil, ProcessBuilder ile yalıtılmış terminalde çalıştırıyoruz.
         try {
-            String javaHome = System.getProperty("java.home");
-            String javaBin = javaHome + File.separator + "bin" + File.separator + "java";
-            String classpath = System.getProperty("java.class.path");
-
-            // Kendi yazdığımız özel Main metoduna sahip çalıştırıcı sınıfımızı (MemnarRunner) tetikliyoruz.
-            // Bu sınıfın içindeki main metodu arka planda temiz bir şekilde PNARpp.runAlgorithm() metodunu çağıracak.
-            ProcessBuilder pb = new ProcessBuilder(javaBin, "-cp", classpath, "org.memnar.backend.memnarjar.config.MemnarRunner");
-            pb.redirectErrorStream(true); // Hata (err) ve Standart (out) logları birleştirir.
-
-            Process process = pb.start();
-
-            // Alt sürecin konsol çıktılarını anlık olarak okuyup web sayfasına basıyoruz
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    System.out.println(line); // System.out'u yakaladığımız için bu loglar anında frontend'e gider!
-                }
-            }
-
-            int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                System.err.println("Algoritma beklenmedik bir şekilde kapandı. Çıkış Kodu: " + exitCode);
-            }
+            PNARpp.runAlgorithm();
         } catch (Exception e) {
-            System.err.println("ProcessBuilder çalıştırılırken hata oluştu: " + e.getMessage());
+            System.err.println("Algoritma çalıştırılırken hata oluştu: " + e.getMessage());
             e.printStackTrace();
         }
 
