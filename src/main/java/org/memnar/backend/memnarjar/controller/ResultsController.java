@@ -25,7 +25,7 @@ public class ResultsController {
         this.resultsService = resultsService;
     }
 
-    @GetMapping(value = "/results/normal", produces = MediaType.TEXT_HTML_VALUE)
+    @GetMapping(value = "/api/results/normal", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<Resource> getNormalResults() {
         File file = resultsService.getLatestResultsFile();
         if (file != null && file.exists()) {
@@ -34,7 +34,7 @@ public class ResultsController {
         return ResponseEntity.notFound().build();
     }
 
-    @GetMapping(value = "/results/conditional", produces = MediaType.TEXT_HTML_VALUE)
+    @GetMapping(value = "/api/results/conditional", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<Resource> getConditionalResults() {
         File file = resultsService.getLatestResultsFile("ConditionalMutualExclusiveSets.html");
         if (file != null && file.exists()) {
@@ -43,7 +43,7 @@ public class ResultsController {
         return ResponseEntity.notFound().build();
     }
 
-    @GetMapping(value = "/results/rules", produces = MediaType.TEXT_HTML_VALUE)
+    @GetMapping(value = "/api/results/rules", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<Resource> getRules() {
         File file = resultsService.getLatestResultsFile("rules.txt");
         if (file != null && file.exists()) {
@@ -52,7 +52,7 @@ public class ResultsController {
         return ResponseEntity.notFound().build();
     }
 
-    @GetMapping(value = "/results/itemsets", produces = MediaType.TEXT_HTML_VALUE)
+    @GetMapping(value = "/api/results/itemsets", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<Resource> getItemSets() {
         File file = resultsService.getLatestResultsFile("itemsets.txt");
         if (file != null && file.exists()) {
@@ -62,7 +62,7 @@ public class ResultsController {
     }
 
     // Grafiklerin her iki adresten de (path kayması sorunu olmadan) çekilebilmesi için
-    @GetMapping(value = {"/IndividualFigures/{filename:.+}", "/results/IndividualFigures/{filename:.+}", "/results/normal/IndividualFigures/{filename:.+}"}, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = {"/api/IndividualFigures/{filename:.+}", "/api/results/IndividualFigures/{filename:.+}", "/api/results/normal/IndividualFigures/{filename:.+}"}, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Resource> getNormalFigure(@PathVariable String filename) {
         File htmlFile = resultsService.getLatestResultsFile();
         if (htmlFile != null && htmlFile.exists()) {
@@ -74,7 +74,7 @@ public class ResultsController {
         return ResponseEntity.notFound().build();
     }
 
-    @GetMapping(value = {"/ConditionalIndividualFigures/{filename:.+}", "/results/ConditionalIndividualFigures/{filename:.+}", "/results/conditional/ConditionalIndividualFigures/{filename:.+}"}, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = {"/api/ConditionalIndividualFigures/{filename:.+}", "/api/results/ConditionalIndividualFigures/{filename:.+}", "/api/results/conditional/ConditionalIndividualFigures/{filename:.+}"}, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Resource> getConditionalFigure(@PathVariable String filename) {
         File htmlFile = resultsService.getLatestResultsFile();
         if (htmlFile != null && htmlFile.exists()) {

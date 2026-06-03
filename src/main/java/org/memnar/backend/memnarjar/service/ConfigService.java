@@ -120,7 +120,7 @@ public class ConfigService {
         } else {
             try {
                 // Ensure parent dir exists
-                if (!dest.getParentFile().exists()) dest.getParentFile().mkdirs();
+                Files.createDirectories(dest.toPath().toAbsolutePath().getParent());
                 Files.copy(source.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 System.out.println("   -> Copied: " + dest.getName());
             } catch (IOException e) {

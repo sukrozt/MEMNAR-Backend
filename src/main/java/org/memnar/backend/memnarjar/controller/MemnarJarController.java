@@ -35,7 +35,7 @@ public class MemnarJarController {
         this.userRepository = userRepository;
     }
 
-    @MessageMapping("/memnarjar/start")
+    @MessageMapping("/api/memnarjar/start")
     @SendTo("/memnarjar/status")
     public MemnarJarStatus runJar(@Payload(required = false) Map<String, String> payload, Principal principal) throws Exception {
 

@@ -25,7 +25,7 @@ public class FileController {
         this.configService = configService;
     }
 
-    @MessageMapping("/memnarjar/datainput") //listens from
+    @MessageMapping("/api/memnarjar/datainput") //listens from
     @SendTo("/memnarjar/status") //send to 
     public MemnarJarStatus handleFileUpload(FileDTO data) {
         System.out.println("\nUPLOAD RECEIVED");
