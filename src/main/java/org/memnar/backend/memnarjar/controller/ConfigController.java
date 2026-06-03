@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/config")
 // This annotation fixes your CORS error by explicitly allowing your Vite frontend
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin
 public class ConfigController {
 
     private final ConfigService configService;
