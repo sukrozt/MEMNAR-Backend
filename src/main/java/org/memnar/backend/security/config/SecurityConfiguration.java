@@ -35,7 +35,7 @@ public class SecurityConfiguration {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Tarayıcının gönderdiği CORS ön-isteklerine izin ver
                 // Frontend'in ulaşması gereken tüm endpointlere izin verildi
-                .requestMatchers("/api/auth/**", "/ws/**", "/websocket-connect/**", "/memnarjar/**", "/api/config", "/api/results/**", "/api/IndividualFigures/**", "/api/ConditionalIndividualFigures/**", "/*.js", "/*.css", "/h2-console/**").permitAll()
+                .requestMatchers("/api/auth/**", "/ws/**", "/websocket-connect/**", "/memnarjar/**", "/api/config", "/results/**", "/IndividualFigures/**", "/ConditionalIndividualFigures/**", "/*.js", "/*.css", "/h2-console/**").permitAll()
                 .anyRequest().authenticated()
             )
             .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
