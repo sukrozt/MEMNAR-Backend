@@ -189,7 +189,7 @@ public class ConfigService {
             // FIX: Algoritmanın klasör okumaya çalışıp çökmesini (Is a directory hatasını) engeller.
             writer.println("Rawinput=" + rawPath);
 
-            writer.println("PvalueCutoff=" + (currentConfig.getPValueCutoff() <= 0.0 ? 0.05 : currentConfig.getPValueCutoff()));
+            writer.println("PvalueCutoff=" + (currentConfig.getPValueCutoff() <= 0.0 ? 1.0 : currentConfig.getPValueCutoff()));
         }
     }
 
